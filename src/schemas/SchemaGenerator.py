@@ -13,7 +13,6 @@ class SchemaGenerator :
     if "name" in kwargs:
       self.name = kwargs["name"]
     
-    return self
   
   def addTable (self, name):
     # add table if not exists
@@ -55,26 +54,34 @@ class SchemaGenerator :
     
     return self
 
-  def addColumn (self, tableName, name, type, nullable = False):
+  def addColumn (self, tableName, name, type, nullable = False, length = None, enum = None):
     if tableName in self.tables:
       self.tables[tableName]['columns'][name] = {}
       self.tables[tableName]['columns'][name]['name'] = name
       self.tables[tableName]['columns'][name]['type'] = type
       self.tables[tableName]['columns'][name]['nullable'] = nullable
+      self.tables[tableName]['columns'][name]['length'] = length
+      self.tables[tableName]['columns'][name]['enum'] = enum
       
     return self
 
   def addColumns (self, tableName, columns):
     for column in columns:
-      nullable = False
-      
+      # default values
+      nullable  =   False
+      length    =   None
+      enum      =   None
+
       # set nullable
       if 'nullable' in column:
         if column['nullable'] == True or column['nullable'] == 'true':
           nullable = True
+      
+      if 'length' in column:  length  =   column['length']
+      if 'enum' in column:    enum    =   column['enum']
 
       # add each entry    
-      self.addColumn (tableName, column['name'], column['type'], nullable)
+      self.addColumn (tableName, column['name'], column['type'], nullable, length, enum)
 
     return self
   
