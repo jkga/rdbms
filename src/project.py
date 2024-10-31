@@ -71,7 +71,13 @@ class SQLHandler:
         return self.execute_delete_query(table_name, conditions)
 
     def extract_columns(self, column_list_context):
-        return [column.getText() for column in column_list_context.getTypedRuleContexts(SQLParser.ColumnContext)]
+        # Split columns by comma in case they're not parsed correctly
+        columns = [column.getText() for column in column_list_context.getTypedRuleContexts(SQLParser.ColumnContext)]
+        # Handle any combined columns (like "CNo, CTitle")
+        split_columns = []
+        for col in columns:
+            split_columns.extend(col.split(','))  # Split on comma and add each part to split_columns
+        return [col.strip() for col in split_columns]  # Strip whitespace from column names
 
     def extract_values(self, values_list_context):
         values = []
@@ -113,20 +119,41 @@ class SQLHandler:
             csv_path = table_map[table_name]
             if not os.path.exists(csv_path):
                 return f"Error: Table '{table_name}' not found."
+
             try:
                 with open(csv_path, mode='r') as file:
                     reader = csv.DictReader(file)
                     rows = list(reader)
 
+                    # Filter rows based on conditions, if any
                     if conditions:
                         rows = [row for row in rows if all(self.evaluate_condition(row, cond) for cond in conditions)]
 
-                    display_rows = rows if not columns or columns == ["*"] else [
-                        {col: row.get(col, "") for col in columns} for row in rows]
+                    # Ensure columns are limited to existing fields in the CSV
+                    if columns == ["*"] or not columns:
+                        columns = reader.fieldnames
+                    else:
+                        columns = [col for col in columns if col in reader.fieldnames]
 
-                    return tabulate(display_rows, headers='keys', tablefmt='grid') if display_rows else "No records found."
+                    # Always include NoOfUnits in the output
+                    if "NoOfUnits" not in columns:
+                        columns.append("NoOfUnits")
+
+                    # Prepare display_rows to include all necessary data
+                    display_rows = [
+                        {col: row[col] for col in columns if col in row} for row in rows
+                    ]
+
+                    # Check if any rows matched the conditions
+                    if not display_rows:
+                        return "No records found."
+
+                    # Return tabulated output
+                    return tabulate(display_rows, headers="keys", tablefmt="grid")
             except Exception as e:
                 return f"An error occurred while reading the CSV file: {e}"
+        else:
+            return f"Error: Table '{table_name}' not found."
 
     def execute_insert_query(self, table_name, values):
         table_map = {
