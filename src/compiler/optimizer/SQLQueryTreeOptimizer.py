@@ -144,7 +144,7 @@ class SQLQueryTreeOptimizer:
                 if (currentNodeType['nodeType'] == nextNodeType['nodeType']) and (currentNodeType['nodeValue'] == nextNodeType['nodeValue']):
                     parsedNode          =   self.__removeDuplicateNextNode (currentNode, nextNode)
                     currentNode         =   parsedNode['currentNode']
-                    nextNode            =   parsedNode['nextNode']
+                    #nextNode            =   parsedNode['nextNode']
                     currentNodeType     =   parsedNode['currentNodeType']
                     nextNodeType        =   parsedNode['nextNodeType']
                 
@@ -225,12 +225,12 @@ class SQLQueryTreeOptimizer:
                     currentNodeType =   parsedNode['currentNodeType']
                     nextNodeType    =   parsedNode['nextNodeType']
 
-                if (currentNodeType['nodeType'] == '__π__') and (nextNodeType['nodeType'] == '__x__'):
+                '''if (currentNodeType['nodeType'] == '__π__') and (nextNodeType['nodeType'] == '__x__'):
                     parsedNode      =   self.__pushProjectionToCrossJoin (currentNode, nextNode)
                     currentNode     =   parsedNode['currentNode']
                     nextNode        =   parsedNode['nextNode']
                     currentNodeType =   parsedNode['currentNodeType']
-                    nextNodeType    =   parsedNode['nextNodeType']
+                    nextNodeType    =   parsedNode['nextNodeType']'''
 
                 # Disable converting to theta join
                 '''if (currentNodeType['nodeType'] == '__Ω__') and (nextNodeType['nodeType'] == '__x__'):

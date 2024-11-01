@@ -11,14 +11,22 @@ class SchemaTableFileLoader :
         self.rows           =   []
         self.results        =   {}
         self.file           =   {}
+        self.tableName      =   None
         self.CSVReader      =   None
+        self.renameHeader   =   True
         self.__readJSONFile (dbFile)
 
     def __readJSONFile (self, dbFile):
         # throw an error if file does not exists
         try:
+            # get table name
+            __baseFileName    =   os.path.basename(os.path.realpath(dbFile))
+            if len(__baseFileName) > 0:
+                __fileName = __baseFileName.split('.')
+                if len(__fileName) > 0: self.tableName   =   __fileName[0]
+
             # open file
-            self.file  =   open(dbFile, mode='r')
+            self.file   =   open(dbFile, mode='r')
 
             # read database
             self.CSVReader  =    csv.reader(self.file)
@@ -42,13 +50,20 @@ class SchemaTableFileLoader :
             # returns data with respective CSV header
             for headerCount in range(len(self.headers)):
                 if headerCount <= len(__nextRow):
-                    __newNextRow[self.headers[headerCount]] = __nextRow[headerCount]
+                    __headerName    =   self.headers[headerCount]
+                    # rename header
+                    if self.renameHeader:
+                        __headerName = f"{self.tableName}.{__headerName}"
+                    __newNextRow[__headerName] = __nextRow[headerCount]
 
             # return next data
             return __newNextRow
 
         except Exception as e:
-           return None
+           return 'EOF'
+    
+    def reset (self):
+        self.file.seek (1)
 
     
     def close (self):
