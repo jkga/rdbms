@@ -341,6 +341,27 @@ class SQLQueryPlanExecution :
                             # convert to string and ' to match string
                             if (f"'{self.currentRow[headerName]}'" == f"{columnWithCondition[2]}") or (f"{self.currentRow[headerName]}" == f"{columnWithCondition[2]}") : 
                                 __shouldReturnRow = True
+                        
+                        if columnWithCondition[1] == '!=':
+                            # convert to string and ' to match string
+                            if (f"'{self.currentRow[headerName]}'" != f"{columnWithCondition[2]}") and (not f"{self.currentRow[headerName]}" != f"{columnWithCondition[2]}") : 
+                                __shouldReturnRow = True
+
+                        if columnWithCondition[1] == '<':
+                            if (f"{self.currentRow[headerName]}" < f"{columnWithCondition[2]}") : 
+                                __shouldReturnRow = True
+                        
+                        if columnWithCondition[1] == '>':
+                            if (f"{self.currentRow[headerName]}" > f"{columnWithCondition[2]}") : 
+                                __shouldReturnRow = True
+                        
+                        if columnWithCondition[1] == '<=':
+                            if (f"{self.currentRow[headerName]}" <= f"{columnWithCondition[2]}") : 
+                                __shouldReturnRow = True
+                        
+                        if columnWithCondition[1] == '>=':
+                            if (f"{self.currentRow[headerName]}" >= f"{columnWithCondition[2]}") : 
+                                __shouldReturnRow = True
 
             if __shouldReturnRow:
                 self.currentRow = __curRow
