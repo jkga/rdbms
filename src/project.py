@@ -135,11 +135,7 @@ class SQLHandler:
                     else:
                         columns = [col for col in columns if col in reader.fieldnames]
 
-                    # Always include NoOfUnits in the output
-                    if "NoOfUnits" not in columns:
-                        columns.append("NoOfUnits")
-
-                    # Prepare display_rows to include all necessary data
+                    # Prepare display_rows to include only specified columns
                     display_rows = [
                         {col: row[col] for col in columns if col in row} for row in rows
                     ]
