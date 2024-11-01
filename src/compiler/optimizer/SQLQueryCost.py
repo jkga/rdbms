@@ -13,7 +13,7 @@ class SQLQueryCost:
         self.totalCosts     =      0
 
         if 'schema' in kwargs:
-            self.schema         =      kwargs['schema']()
+            self.schema         =      self.schema = kwargs['schema']() if callable(kwargs['schema']) else kwargs['schema']
     
     def setDebug (self, debug = False):
         self.debug      =   debug
@@ -297,7 +297,6 @@ class SQLQueryCost:
             for table in tempTables:
                 prop = self.schema.getProperties (table)
                 cols = self.schema.getColumns (table)
- 
                 tempRowCount   +=   prop['rows']
                 tempColCount   +=   len(cols)
 

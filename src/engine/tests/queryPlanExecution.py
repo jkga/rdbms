@@ -20,10 +20,22 @@ from compiler.optimizer.SQLQueryPlan import SQLQueryPlan
 from compiler.optimizer.SQLQueryCost import SQLQueryCost
 from engine.SQLQueryPlanSelector import SQLQueryPlanSelector
 from engine.SQLQueryPlanExecution import SQLQueryPlanExecution
+from schemas.SchemaFileLoader import SchemaFileLoader
+
+databasePath        =   './data/databases'
+databaseName        =   'students' 
 
 if __name__ == '__main__':
+    # load schema from file
+    defaultDatabaseSchema       =   None
+    fileLoader                  =   SchemaFileLoader (f"{databasePath}/{databaseName}.db/{databaseName}.db.json")
+    databaseSchemaInstance      =   fileLoader.getResults ()
+    
+    # set default database schema
+    if 'schema' in databaseSchemaInstance: defaultDatabaseSchema = databaseSchemaInstance['schema']
+
     inputStream = antlr4.InputStream(sys.argv[1])
-    sqlAnnotate = SQLAnnotate(sql = inputStream, schema = Students)
+    sqlAnnotate = SQLAnnotate(sql = inputStream, schema = defaultDatabaseSchema)
     sqlAnnotate.annotate()
     annotations = sqlAnnotate.getAnnotations()
 
@@ -53,7 +65,7 @@ if __name__ == '__main__':
     queryPlans  =    []
     # get estimate
     for plan in generatedQueryPlans:
-        queryCostEstimator  =   SQLQueryCost (plan, schema = Students).setDebug(False)
+        queryCostEstimator  =   SQLQueryCost (plan, schema = defaultDatabaseSchema).setDebug(False)
         queryCost   =   queryCostEstimator.estimate ()
         queryPlans.append (queryCost)
     
@@ -66,9 +78,7 @@ if __name__ == '__main__':
     print(bestPlan)
     print('-->----------------------------\r\n')
   
-    if 'plan' in bestPlan:
-        databasePath        =   './data/databases'
-        databaseName        =   'students'   
+    if 'plan' in bestPlan:  
         queryPlanExecution  =   SQLQueryPlanExecution (bestQueryPlan.getResults()['plan'])
         queryPlanExecution.setDebug(False).setDatabasePath(databasePath).setDatabaseName(databaseName).execute ()
         

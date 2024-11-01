@@ -20,7 +20,7 @@ class SQLVisitor(ParseTreeVisitor):
 
     def loadSchema (self, Schema):
         if Schema != None:
-            self.schema = Schema()
+            self.schema = Schema() if callable(Schema) else Schema
     
     def debugData (self, data, query = ''):
         if data and self.debug:
