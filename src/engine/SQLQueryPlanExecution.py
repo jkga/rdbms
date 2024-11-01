@@ -178,8 +178,9 @@ class SQLQueryPlanExecution :
                                             print('\r\n-------[END PIPE]---------\r\n')
 
                                         # after merging and pipelining
-                                        self.rowCount += 1
-                                        self.rows.append (self.currentRow)
+                                        if self.currentRow != None:
+                                            self.rowCount += 1
+                                            self.rows.append (self.currentRow)
 
                             
                             while True:
@@ -210,7 +211,7 @@ class SQLQueryPlanExecution :
                                                 self.currentRow = {**__parentRow, **self.currentRow}
 
                                                 if self.debug :
-                                                    print('\r\n-------[PIPE]---------')
+                                                    print('\r\n-------[PIPE 2]---------')
                                                     print(callbackSteps)
                                                     print('----------------------\r\n')
 
@@ -223,8 +224,9 @@ class SQLQueryPlanExecution :
                                                     print('\r\n-------[END PIPE]---------\r\n')
 
                                                 # after merging and pipelining
-                                                self.rowCount += 1
-                                                self.rows.append (self.currentRow)
+                                                if self.currentRow != None:
+                                                    self.rowCount += 1
+                                                    self.rows.append (self.currentRow)
                                         else:
                                             # eof
                                             break
@@ -367,6 +369,59 @@ class SQLQueryPlanExecution :
                 self.currentRow = __curRow
             else:
                 self.currentRow =   None
+        else:
+            print('\r\n---[MULTIPLE SELECTION]---')
+            print(self.currentRow)
+            print('---------------------------\r\n')
+
+            for headerName in self.currentRow:
+                print(headerName)
+
+                for sel in __selections:
+                    # split selection
+                    columnWithCondition = re.split(r'\s*(=|!=|<=|>=|<|>)\s*', sel)
+
+                    # match row and condition
+                    if headerName == columnWithCondition[0]:
+                         # ==
+                        if columnWithCondition[1] == '=':
+                            if self.debug:
+                                print(f'\r\n--[COMPARING] : {headerName}--', self.currentRow[headerName], ':', columnWithCondition[2])
+                                print('----', type(self.currentRow[headerName]), type(columnWithCondition[2]))
+                                print('----', len(self.currentRow[headerName]), len(columnWithCondition[2]))
+                                print('----', f"{self.currentRow[headerName]}" == f"{columnWithCondition[2]}")
+                                print('----', f"'{self.currentRow[headerName]}'" == f"{columnWithCondition[2]}")
+
+                            # convert to string and ' to match string
+                            if (f"'{self.currentRow[headerName]}'" == f"{columnWithCondition[2]}") or (f"{self.currentRow[headerName]}" == f"{columnWithCondition[2]}") : 
+                                __shouldReturnRow = True
+
+                        if columnWithCondition[1] == '!=':
+                            # convert to string and ' to match string
+                            if (f"'{self.currentRow[headerName]}'" != f"{columnWithCondition[2]}") and (not f"{self.currentRow[headerName]}" != f"{columnWithCondition[2]}") : 
+                                __shouldReturnRow = True
+
+                        if columnWithCondition[1] == '<':
+                            if (f"{self.currentRow[headerName]}" < f"{columnWithCondition[2]}") : 
+                                __shouldReturnRow = True
+                        
+                        if columnWithCondition[1] == '>':
+                            if (f"{self.currentRow[headerName]}" > f"{columnWithCondition[2]}") : 
+                                __shouldReturnRow = True
+                        
+                        if columnWithCondition[1] == '<=':
+                            if (f"{self.currentRow[headerName]}" <= f"{columnWithCondition[2]}") : 
+                                __shouldReturnRow = True
+                        
+                        if columnWithCondition[1] == '>=':
+                            if (f"{self.currentRow[headerName]}" >= f"{columnWithCondition[2]}") : 
+                                __shouldReturnRow = True
+
+            if __shouldReturnRow:
+                self.currentRow = __curRow
+            else:
+                self.currentRow =   None
+
 
         return self
 
