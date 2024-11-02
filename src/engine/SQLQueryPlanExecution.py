@@ -370,12 +370,12 @@ class SQLQueryPlanExecution :
             else:
                 self.currentRow =   None
         else:
-            print('\r\n---[MULTIPLE SELECTION]---')
-            print(self.currentRow)
-            print('---------------------------\r\n')
+            if self.debug:
+                print('\r\n---[MULTIPLE SELECTION]---')
+                print(self.currentRow)
+                print('---------------------------\r\n')
 
             for headerName in self.currentRow:
-                print(headerName)
 
                 for sel in __selections:
                     # split selection
