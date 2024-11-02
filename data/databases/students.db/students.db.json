@@ -205,7 +205,7 @@
             "indexes"   :   {},
             "columns"   :   {
                 "studentno"    :   {
-                    "name"      :   "StudentNo",
+                    "name"      :   "StudNo",
                     "type"      :   "string",
                     "nullable"  :   "true"
                 },
