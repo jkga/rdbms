@@ -1,6 +1,7 @@
 import customtkinter
 import os
 import sys
+import time
 from tkinter import Tk
 from dotenv import load_dotenv
 from functools import partial
@@ -17,6 +18,7 @@ from engine.SQLQueryEngine import SQLQueryEngine
 # restore parent directory path
 sys.path.append(os.path.abspath(os.path.join(dir_path, os.pardir)))
 from ui.pages.WelcomePage.Index import Index as WelcomePage
+from ui.pages.TablePage.Index import Index as TablePage
 
 
 
@@ -49,6 +51,8 @@ class Index:
         self.sidebarTitle.grid(row=0, column=0, ipady="2", ipadx="10", sticky="ew")
 
         self.sidebarContentFrame = customtkinter.CTkFrame(self.sidebar, width=200, height=780, bg_color="transparent", fg_color="transparent", corner_radius=0)
+        self.sidebarContentFrame.grid_rowconfigure(0, weight=1)
+        self.sidebarContentFrame.grid_columnconfigure (0, weight=1)
         self.sidebarContentFrame.grid(row=1, column=0, padx=0, pady=0, sticky="nsew")
 
         # run database sengine
@@ -83,7 +87,7 @@ class Index:
             
             # tables
             for __table in self.databases[__databaseName]:
-                item = customtkinter.CTkButton(master=self.sidebarContentFrame, text=f"{self.tabs}{__table}", text_color="#D3D3D3", bg_color="transparent", fg_color="transparent", corner_radius=0, anchor="w", hover_color="#178015")
+                item = customtkinter.CTkButton(master=self.sidebarContentFrame, text=f"{self.tabs}{__table}", text_color="#C3C3C3", bg_color="transparent", fg_color="transparent", corner_radius=0, anchor="w", hover_color="#178015")
                 item.pack(fill="both", expand=True)
                 item.bind("<Button-1>", partial(self.__selectTable, __databaseName, __table, self.databases[__databaseName], item))
             
@@ -96,6 +100,9 @@ class Index:
 
         # udpate UI
         self.__updateDatabaseList ()
+        self.__loadTablePage (databaseName, tableName)
+
+        return self
 
     def __updateDatabaseList (self):
         self.sidebarContentFrame = customtkinter.CTkFrame(self.sidebar, width=200, height=780, bg_color="transparent", fg_color="transparent", corner_radius=0)
@@ -115,13 +122,35 @@ class Index:
             
             # tables
             for __table in self.databases[__databaseName]:
-                item = customtkinter.CTkButton(master=self.sidebarContentFrame, text=f"{self.tabs}{__table}", text_color="#D3D3D3", bg_color="transparent", fg_color="transparent", corner_radius=0, anchor="w", hover_color="#178015")
+                item = customtkinter.CTkButton(master=self.sidebarContentFrame, text=f"{self.tabs}{__table}", text_color="#C3C3C3", bg_color="transparent", fg_color="transparent", corner_radius=0, anchor="w", hover_color="#178015")
                 if self.databases[__databaseName][__table] == True: item.configure(bg_color = "#178015")
                 item.pack(fill="both", expand=True)
                 item.bind("<Button-1>", partial(self.__selectTable, __databaseName, __table, self.databases[__databaseName], item))
-                
+        
+        return self
+            
     def __loadWelcomePage (self):
-        welcomePage = WelcomePage (self.mainContentFrame)
+        WelcomePage (self.mainContentFrame)
+        return self
+    
+    def __loadTablePage (self, databaseName, tableName):
+        tablePage = TablePage (self.mainContentFrame, self.engine, databaseName, tableName)
+        
+
+        while True:
+            __tableThread = tablePage.getTableThread ()
+
+            if __tableThread is not None:
+                tablePage.showTableData(__tableThread)
+                break
+            elif tablePage.tableThread.is_alive ():
+                pass   
+            else:
+                pass
+            
+            time.sleep(1)
+
+        return self
                 
 
 

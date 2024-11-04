@@ -22,7 +22,7 @@
                 },
 
                 "birthday"    :   {
-                    "name"      :   "BirthDay",
+                    "name"      :   "Birthday",
                     "type"      :   "date",
                     "nullable"  :   "true",
                     "length"    :   8
