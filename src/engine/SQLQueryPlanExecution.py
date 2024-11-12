@@ -87,6 +87,17 @@ class SQLQueryPlanExecution :
                                 __nextStep  = __nextStep[n]
 
                         self.__processMergeSteps (plan[x][stepName], __nextStep)
+                    else:
+                        if '__SEQUENCE__' in stepName:
+                            while self.__mustContinue:
+                                self.__processSequenceSteps (plan[x][stepName], True)
+
+                                if not self.currentRow == 'EOF':
+                                    # after merging and pipelining
+                                    if self.currentRow != None:
+                                        self.rowCount += 1
+                                        self.rows.append (self.currentRow)
+
             else:
                 for stepName in plan[x]:
                     if '__SEQUENCE__' in stepName:
@@ -439,7 +450,8 @@ class SQLQueryPlanExecution :
         if __curRow:
             for headerName in self.currentRow:
                 if not headerName in __columns:
-                    del __curRow[headerName]
+                    if not isinstance(__curRow, str):
+                        del __curRow[headerName]
         
         self.currentRow =   __curRow
         return self

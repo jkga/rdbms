@@ -2,6 +2,7 @@ import customtkinter
 import os
 import sys
 import time
+import threading
 from tkinter import Tk
 from dotenv import load_dotenv
 from functools import partial
@@ -100,7 +101,9 @@ class Index:
 
         # udpate UI
         self.__updateDatabaseList ()
-        self.__loadTablePage (databaseName, tableName)
+
+        threading.Thread(target = partial(self.__loadTablePage, databaseName, tableName), daemon=True).start ()
+        #self.__loadTablePage (databaseName, tableName)
 
         return self
 
@@ -135,12 +138,16 @@ class Index:
     
     def __loadTablePage (self, databaseName, tableName):
         tablePage = TablePage (self.mainContentFrame, self.engine, databaseName, tableName)
-        
+        tablePage.__startTableThread ()    
 
         while True:
             __tableThread = tablePage.getTableThread ()
 
             if __tableThread is not None:
+                tablePage.__showSQLQueryTextBox ()
+                tablePage.__showTableStatusSection ()
+                tablePage.__removeTableSection ()
+                tablePage.__showTableSection ()
                 tablePage.showTableData(__tableThread)
                 break
             elif tablePage.tableThread.is_alive ():
