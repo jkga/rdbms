@@ -5,7 +5,9 @@ import threading
 import math
 import time
 from tkinter import Tk
-from PIL import Image
+from cairosvg import svg2png
+from PIL import Image, ImageTk
+import io
 from dotenv import load_dotenv
 from CTkTable import *
 from functools import partial
@@ -18,12 +20,21 @@ databasePath = os.getenv('DATABASE_PATH')
 # manual access to schema directory
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.abspath(os.path.join(dir_path,  '../../../' +  os.pardir)))
+
 from ui.components.CTkXYFrame import *
 from ui.components.ProgressBar import Index as ProgressBar
 from ui.components.ShowAllRowsConfirmationWindows import Index as ShowAllRowsConfirmationWindows
 
 # restore parent directory path
 sys.path.append(os.path.abspath(os.path.join(dir_path, os.pardir)))
+
+fontFileCheckIcon           =   os.path.abspath(os.path.join(dir_path, '../../../assets/fonts/fontawesome/svgs/solid/circle-check.svg'))
+fontFileWarningIcon         =   os.path.abspath(os.path.join(dir_path, '../../../assets/fonts/fontawesome/svgs/solid/triangle-exclamation.svg'))
+fontFileTableColumnsIcon    =   os.path.abspath(os.path.join(dir_path, '../../../assets/fonts/fontawesome/svgs/solid/table-columns.svg'))
+fontFileBoltIcon            =   os.path.abspath(os.path.join(dir_path, '../../../assets/fonts/fontawesome/svgs/solid/bolt.svg'))
+fontFileNextIcon            =   os.path.abspath(os.path.join(dir_path, '../../../assets/fonts/fontawesome/svgs/solid/chevron-right.svg'))
+fontFilePrevIcon            =   os.path.abspath(os.path.join(dir_path, '../../../assets/fonts/fontawesome/svgs/solid/chevron-left.svg'))
+
 
 class Index:
     def __init__(self, root, engine, databaseName, tableName):
@@ -33,7 +44,8 @@ class Index:
         self.tableName              =   tableName
         self.databases              =   {}
         self.SQLData                =   None
-        self.SQL                    =   f"SELECT * FROM {self.tableName};"
+        self.SQlError               =   None
+        self.SQL                    =   f"SELECT * FROM  {self.tableName};"
         self.tabs                   =   f"       "
         self.footNote               =   "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"
         self.projectLink            =   "https://github.com/UPLB-CMSC227/rdbms"
@@ -44,6 +56,7 @@ class Index:
         self.totalPages             =   0
         self.currentPage            =   1
         self.maxRowCountPerPage     =   50
+        self.executionTime          =   "0.00"
         self.ProgressBar            =   None
         self.maxRowCountWindow      =   None
 
@@ -121,29 +134,65 @@ class Index:
         self.SQLQueryTextBoxBtnFrame = customtkinter.CTkFrame(master=self.SQLQueryTextBoxFrame, bg_color="#2D2D2D", fg_color="transparent", height=50)
         self.SQLQueryTextBoxBtnFrame.grid_rowconfigure(0, weight=1)
         self.SQLQueryTextBoxBtnFrame.grid_columnconfigure (1, weight=1)
-        self.SQLQueryTextBoxBtnFrame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+        self.SQLQueryTextBoxBtnFrame.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
+
+        # bolt icon
+        with open(fontFileBoltIcon, "rb") as svg_file:
+            cont = svg_file.read ()
+            mod = cont.decode('utf-8').replace('<path', '<path fill="#ffffff"')
+            mod.encode('utf-8')
+            iconData = svg2png(bytestring=mod, output_width=20, output_height=15)
+        
+        # Load the PNG data into a PIL Image
+        imageIcon = Image.open(io.BytesIO(iconData))
+        boltIcon = ImageTk.PhotoImage(imageIcon)
 
 
-        self.SQLQueryTextBoxExecuteBtn = customtkinter.CTkButton(master=self.SQLQueryTextBoxBtnFrame, bg_color="transparent", fg_color="#505050", hover_color="#707070", text="Execute", corner_radius=20)
+        self.SQLQueryTextBoxExecuteBtn = customtkinter.CTkButton(master=self.SQLQueryTextBoxBtnFrame, bg_color="transparent", fg_color="#505050", hover_color="#707070", text="Execute", corner_radius=20, image=boltIcon)
         self.SQLQueryTextBoxExecuteBtn.bind("<Button-1>", self.__executeSQLFromTextArea)
         self.SQLQueryTextBoxExecuteBtn.grid(row=0, column=1, sticky="se")
 
     def __showSQLQueryStatusBox (self):
-        self.SQLQueryTextBoxStatusFrame = customtkinter.CTkFrame(master=self.SQLQueryTextBoxBtnFrame, bg_color="transparent", fg_color="transparent", width=850, height=30, corner_radius=20)
+        self.SQLQueryTextBoxStatusFrame = customtkinter.CTkFrame(master=self.SQLQueryTextBoxBtnFrame, bg_color="transparent", fg_color="transparent")
         self.SQLQueryTextBoxStatusFrame.grid_rowconfigure(0, weight=1)
-        self.SQLQueryTextBoxStatusFrame.grid_columnconfigure (4, weight=1)
+        self.SQLQueryTextBoxStatusFrame.grid_columnconfigure (0, weight=1)
         self.SQLQueryTextBoxStatusFrame.grid(row=0, column=0, sticky="nsew")
 
-        #self.SQLQueryTextBoxStatusBoxFrame = customtkinter.CTkLabel(master=self.SQLQueryTextBoxStatusFrame, text="", bg_color="red", fg_color="red", width=830, corner_radius=50)
-        #self.SQLQueryTextBoxStatusBoxFrame.grid_rowconfigure(0, weight=1)
-       # self.SQLQueryTextBoxStatusBoxFrame.grid_columnconfigure (2, weight=1)
-        #self.SQLQueryTextBoxStatusBoxFrame.grid(row=0, column=0, sticky="nsew")
+        self.SQLQueryTextBoxStatusBoxFrame = customtkinter.CTkFrame(master=self.SQLQueryTextBoxStatusFrame,  bg_color="transparent", fg_color="transparent", width=830, corner_radius=30)
+        self.SQLQueryTextBoxStatusBoxFrame.grid_rowconfigure(0, weight=1)
+        self.SQLQueryTextBoxStatusBoxFrame.grid_columnconfigure (1, weight=1)
+        self.SQLQueryTextBoxStatusBoxFrame.grid(row=0, column=0, sticky="new")
 
-        self.SQLQueryStatusText = customtkinter.CTkLabel(master=self.SQLQueryTextBoxStatusFrame, text=" ", bg_color="transparent", fg_color="transparent")
-        self.SQLQueryStatusText.grid(row=0, column=0, sticky="nsew")
 
-        self.SQLQueryStatusText = customtkinter.CTkLabel(master=self.SQLQueryTextBoxStatusFrame, text=" ", bg_color="transparent", fg_color="transparent")
-        self.SQLQueryStatusText.grid(row=0, column=1, sticky="nsew")
+        if self.SQlError == None:
+            with open(fontFileCheckIcon, "rb") as svg_file:
+                cont = svg_file.read ()
+                mod = cont.decode('utf-8').replace('<path', '<path fill="#78D576"')
+                mod.encode('utf-8')
+                iconData = svg2png(bytestring=mod, output_width=20, output_height=15)
+
+            # Load the PNG data into a PIL Image
+            imageIcon = Image.open(io.BytesIO(iconData))
+            checkIcon = ImageTk.PhotoImage(imageIcon)
+
+            self.SQLQueryStatusText = customtkinter.CTkLabel(master=self.SQLQueryTextBoxStatusBoxFrame, text=f"EXECUTE COMMAND: {self.SQL}", bg_color="transparent", fg_color="#424242", text_color="#C3C3C3", width=700, corner_radius=30, compound='left', anchor='w', justify='left', image=checkIcon, wraplength=700)
+            self.SQLQueryStatusText.grid(row=0, column=0, sticky="w", padx=5, ipady=2, pady=5)
+        else:
+            with open(fontFileWarningIcon, "rb") as svg_file:
+                cont = svg_file.read ()
+                mod = cont.decode('utf-8').replace('<path', '<path fill="#ffffff"')
+                mod.encode('utf-8')
+                iconData = svg2png(bytestring=mod, output_width=20, output_height=15)
+
+            # Load the PNG data into a PIL Image
+            imageIcon = Image.open(io.BytesIO(iconData))
+            checkIcon = ImageTk.PhotoImage(imageIcon)
+
+            self.SQLQueryStatusText = customtkinter.CTkLabel(master=self.SQLQueryTextBoxStatusBoxFrame, text=f"WARNING: {self.SQlError}", bg_color="transparent", fg_color="#E5A14D", text_color="#ffffff", width=700, corner_radius=30, compound='left', anchor='w', justify='left', image=checkIcon, wraplength=700, font=customtkinter.CTkFont(size = 12))
+            self.SQLQueryStatusText.grid(row=0, column=0, sticky="w", padx=5, ipady=2)    
+                                                         
+        self.SQLQueryStatusTextTime = customtkinter.CTkLabel(master=self.SQLQueryTextBoxStatusBoxFrame, text=f"TOOK: {self.executionTime}", bg_color="transparent", fg_color="transparent", corner_radius=0, compound='left', anchor='w')
+        self.SQLQueryStatusTextTime.grid(row=0, column=1, sticky="w", padx=5)
 
     def __showTableStatusSection (self):
         self.TableStatusFrame = customtkinter.CTkFrame(master=self.midFrame, bg_color="transparent", fg_color="transparent")
@@ -161,8 +210,18 @@ class Index:
         self.TableStatusFrameRight.grid_columnconfigure (0, weight=1)
         self.TableStatusFrameRight.grid(row=0, column=1, padx="0", pady="0", sticky="nsew")
 
+        # column icon
+        with open(fontFileTableColumnsIcon, "rb") as svg_file:
+            cont = svg_file.read ()
+            mod = cont.decode('utf-8').replace('<path', '<path fill="#78D576"')
+            mod.encode('utf-8')
+            iconData = svg2png(bytestring=mod, output_width=20, output_height=15)
 
-        self.tableText = customtkinter.CTkLabel(master=self.TableStatusFrameLeft, text=f"[{self.databaseName}/{self.tableName}]", bg_color="transparent", fg_color="transparent", font=customtkinter.CTkFont(size = 16), justify="left", anchor="w", text_color="#C3C3C3", width=500)
+        # Load the PNG data into a PIL Image
+        imageIcon = Image.open(io.BytesIO(iconData))
+        columnIcon = ImageTk.PhotoImage(imageIcon)
+
+        self.tableText = customtkinter.CTkLabel(master=self.TableStatusFrameLeft, text=f"[{self.databaseName}/{self.tableName}]", bg_color="transparent", fg_color="transparent", font=customtkinter.CTkFont(size = 16), compound='left', justify="left", anchor="w", text_color="#C3C3C3", image=columnIcon, width=500)
         self.tableText.grid(row=0, column=0, padx="10", sticky="nw")
         self.tableText = customtkinter.CTkLabel(master=self.TableStatusFrameLeft, text="active table", bg_color="transparent", fg_color="transparent", justify="left", anchor="w", text_color="#656565", width=500)
         self.tableText.grid(row=1, column=0, padx="10", sticky="nw")
@@ -193,7 +252,7 @@ class Index:
         self.paginationFrame.grid_columnconfigure (1, weight=1)
         self.paginationFrame.grid(row=0, column=0, sticky="nsew")
 
-        self.paginationFrameLeft = customtkinter.CTkFrame(master=self.paginationFrame, bg_color="transparent", fg_color="transparent", width=830)
+        self.paginationFrameLeft = customtkinter.CTkFrame(master=self.paginationFrame, bg_color="transparent", fg_color="transparent")
         self.paginationFrameLeft.grid_rowconfigure(1, weight=1)
         self.paginationFrameLeft.grid_columnconfigure (0, weight=1)
         self.paginationFrameLeft.grid(row=0, column=0, sticky="nsew")
@@ -220,19 +279,41 @@ class Index:
         self.paginationLastBtn.bind("<Button-1>", partial(self.__paginateLast, self.paginationLastBtn))
         self.paginationLastBtn.grid(row=0, column=1, sticky="nsew")
 
-        self.paginationPrevBtn = customtkinter.CTkButton(master=self.paginationBtnSection, bg_color="transparent", fg_color="transparent", text="Prev", width=50)
+        # previcon
+        with open(fontFilePrevIcon, "rb") as svg_file:
+            cont = svg_file.read ()
+            mod = cont.decode('utf-8').replace('<path', '<path fill="#ffffff"')
+            mod.encode('utf-8')
+            iconData = svg2png(bytestring=mod, output_width=20, output_height=15)
+
+        # Load the PNG data into a PIL Image
+        imageIcon = Image.open(io.BytesIO(iconData))
+        prevIcon = ImageTk.PhotoImage(imageIcon)
+
+        self.paginationPrevBtn = customtkinter.CTkButton(master=self.paginationBtnSection, bg_color="transparent", fg_color="transparent", text="Prev", width=50, image=prevIcon)
         self.paginationPrevBtn.bind("<Button-1>", partial(self.__paginatePrev, self.paginationPrevBtn))
         self.paginationPrevBtn.grid(row=0, column=2, sticky="nsew")
 
-        self.paginationNextBtn = customtkinter.CTkButton(master=self.paginationBtnSection, bg_color="transparent", fg_color="green", text="Next", corner_radius=20, width=50)
+        # next icon
+        with open(fontFileNextIcon, "rb") as svg_file:
+            cont = svg_file.read ()
+            mod = cont.decode('utf-8').replace('<path', '<path fill="#ffffff"')
+            mod.encode('utf-8')
+            iconData = svg2png(bytestring=mod, output_width=20, output_height=15)
+
+        # Load the PNG data into a PIL Image
+        imageIcon = Image.open(io.BytesIO(iconData))
+        nextIcon = ImageTk.PhotoImage(imageIcon)
+
+        self.paginationNextBtn = customtkinter.CTkButton(master=self.paginationBtnSection, bg_color="transparent", fg_color="green", text="Next", corner_radius=20, width=50, image=nextIcon, compound='right')
         self.paginationNextBtn.bind("<Button-1>", partial(self.__paginateNext, self.paginationNextBtn))
         self.paginationNextBtn.grid(row=0, column=3, sticky="nsew")
 
 
-        self.paginationEmpty = customtkinter.CTkFrame(master=self.paginationFrameLeft, bg_color="transparent", fg_color="transparent", height=10, width=800)
+        self.paginationEmpty = customtkinter.CTkFrame(master=self.paginationFrameLeft, bg_color="transparent", fg_color="transparent", height=10, width=750)
         self.paginationEmpty.grid(row=0, column=0, sticky="new")
 
-        self.paginationRowCountSection = customtkinter.CTkFrame(master=self.paginationFrameLeft, bg_color="transparent", fg_color="transparent", width=800)
+        self.paginationRowCountSection = customtkinter.CTkFrame(master=self.paginationFrameLeft, bg_color="transparent", fg_color="transparent", width=750)
         self.paginationRowCountSection.grid_rowconfigure(0, weight=1)
         self.paginationRowCountSection.grid_columnconfigure (0, weight=1)
         self.paginationRowCountSection.grid(row=1, column=0, sticky="nsew")
@@ -323,19 +404,19 @@ class Index:
         __startIndex    =   0 if self.currentPage == 1 else (__maxRows * (self.currentPage-1))
         __data          =   []
 
-
+        if 'executionTime' in data: self.executionTime  =   data['executionTime']
         if 'rowCount' in data: self.rowCount = data['rowCount']
         if 'rows' in data:
             for rowIndex in range(__maxRows):
                 if((rowIndex + __startIndex) < (__maxRows + __startIndex)): 
-                    if((rowIndex + __startIndex) < self.rowCount):
+                    if((rowIndex + __startIndex) < self.rowCount + 1):
                         __data.append(data['rows'][__startIndex+rowIndex])
 
         if self.rowCount < 1 : __data = [[]]
         
         self.dataTable = CTkTable(master=self.tableDataFrame, justify="left", header_color="#3C703B", hover_color="#2E2E2E", values=__data)
         #table.edit_row(0, text_color = '#2E2E2E')
-        self.dataTable.grid(row=0, column=0, padx="0", pady="0", sticky="nsew")
+        self.dataTable.grid(row=0, column=0, padx="0", pady="0", sticky="new")
  
         # compute total pages
         self.totalPages = math.ceil(self.rowCount / __maxRows)
@@ -385,44 +466,78 @@ class Index:
         return self.SQLData
 
     def __executeSQLFromTextArea (self, e):
-        self.SQLData = None
+        __query             =   self.SQLQueryTextBox.get("0.0", "end")
+        self.SQLError       =   None
+        self.tableThread    =   None
+        self.currentPage    =   1
+        
+        # prevent empty command
+        if not __query: return self
+        if len(__query.strip ()) < 1: return self
+
+        # clear other threads
         self.tableThreadEvent.clear()
         self.tableThreadEvent.set()
-        self.tableThread = None
-        __query             =   self.SQLQueryTextBox.get("0.0", "end")
-        self.tableThread    =   None
+
+         # load progress
+        self.ProgressBar = ProgressBar.Index ()
+        self.ProgressBar.setTargetComponent (self.topFrame).start ()
+
+       
+        #self.tableThread    =   None
         self.SQL            =   __query.strip ()
+        self.mustContinue   =   False
   
         self.engine.useDatabase (self.databaseName)
-        self.engine.parse(self.SQL)
-
-        self.rowCount           =   self.engine.getRowCount ()
-        self.maxRowCountPerPage =   50
-        __rowCount              =   self.rowCount
-        self.SQLData            =   None
-        __headers               =   []
-        __data                  =   []
-  
-        if __rowCount > 0:
-            __rows = self.engine.getRows ()
-
-            for rowIndex in range(__rowCount):
-                __currentData = []
-                for name in __rows[rowIndex]:
-                    # get header once
-                    if rowIndex == 0:
-                        __headers.append(name)
-                        __currentData.append(__rows[rowIndex][name])
-                    else:
-                        __currentData.append(__rows[rowIndex][name])
-                
-                if rowIndex == 0: __data.append(__headers)
-                # add to data
-                __data.append(__currentData)
         
-        self.SQLData    =   {"rowCount": __rowCount , "rows": __data, "executionTime": self.engine.getExecutionTime ()}
-        print(self.SQLData)
-        self.showTableData (self.SQLData)
+        try:
+            self.engine.parse(self.SQL)
+            if self.engine.error == None:
+                self.mustContinue   =   True
+                self.SQlError       =   None
+
+        except Exception as e:
+            self.mustContinue   =   False
+        
+
+        if not self.mustContinue:
+            self.ProgressBar.stop ()
+            self.SQL        =   None
+            self.SQlError   =   self.engine.error['error']
+            self.__showSQLQueryStatusBox ()
+            return
+        
+
+        if self.mustContinue:
+            self.rowCount           =   self.engine.getRowCount ()
+            self.maxRowCountPerPage =   50
+            __rowCount              =   self.rowCount
+            self.SQLData            =   None
+            __headers               =   []
+            __data                  =   []
+    
+            if __rowCount > 0:
+                __rows = self.engine.getRows ()
+
+                for rowIndex in range(__rowCount):
+                    __currentData = []
+                    for name in __rows[rowIndex]:
+                        # get header once
+                        if rowIndex == 0:
+                            __headers.append(name)
+                            __currentData.append(__rows[rowIndex][name])
+                        else:
+                            __currentData.append(__rows[rowIndex][name])
+                    
+                    if rowIndex == 0: __data.append(__headers)
+                    # add to data
+                    __data.append(__currentData)
+            
+            self.SQLData    =   {"rowCount": __rowCount , "rows": __data, "executionTime": self.engine.getExecutionTime ()}
+            self.showTableData (self.SQLData)
+            self.SQLQueryTextBoxStatusFrame.destroy ()
+            self.__showSQLQueryStatusBox ()
+
         return self
         
 

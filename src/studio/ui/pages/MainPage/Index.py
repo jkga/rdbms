@@ -6,6 +6,11 @@ import threading
 from tkinter import Tk
 from dotenv import load_dotenv
 from functools import partial
+from tkinter.font import Font
+
+from cairosvg import svg2png
+from PIL import Image, ImageTk
+import io
 
 # load env variables
 load_dotenv(dotenv_path=f'configs/.env')
@@ -21,6 +26,8 @@ sys.path.append(os.path.abspath(os.path.join(dir_path, os.pardir)))
 from ui.pages.WelcomePage.Index import Index as WelcomePage
 from ui.pages.TablePage.Index import Index as TablePage
 
+# Load the Font Awesome OTF font
+fontFile    =   os.path.abspath(os.path.join(dir_path, '../../../assets/fonts/fontawesome/svgs/solid/database.svg'))
 
 
 class Index:
@@ -33,7 +40,7 @@ class Index:
         self.mainFrame.grid_rowconfigure(0, weight=1)
         self.mainFrame.grid_columnconfigure (1, weight=1)
 
-        self.mainContentFrame = customtkinter.CTkFrame(master=self.mainFrame, corner_radius=0, bg_color="red", fg_color="transparent")
+        self.mainContentFrame = customtkinter.CTkFrame(master=self.mainFrame, corner_radius=0, bg_color="transparent", fg_color="transparent")
         self.mainContentFrame.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
         self.mainContentFrame.grid_rowconfigure(0, weight=1)
         self.mainContentFrame.grid_columnconfigure (0, weight=1)
@@ -84,7 +91,23 @@ class Index:
                 self.databases[__databaseName][table] = False
 
             itemHeader = customtkinter.CTkLabel(master=itemFrame, text=f"{__databaseName}", text_color="#F3F3F3", bg_color="transparent", fg_color="transparent", font=customtkinter.CTkFont(size = 12), justify="left")
-            itemHeader.grid(row=0, column=0, ipady="5", ipadx="20", sticky="w")
+            itemHeader.grid(row=0, column=0, ipady="5", ipadx="30", sticky="w")
+
+            with open(fontFile, "rb") as svg_file:
+                cont = svg_file.read ()
+                mod = cont.decode('utf-8').replace('<path', '<path fill="#ffffff"')
+                mod.encode('utf-8')
+                png_data = svg2png(bytestring=mod, output_width=20, output_height=15)
+
+            # Load the PNG data into a PIL Image
+            image = Image.open(io.BytesIO(png_data))
+            photo_image = ImageTk.PhotoImage(image)
+
+            # Create a label and display the image
+            image_label = customtkinter.CTkLabel(master = itemHeader, text="", image=photo_image)
+            image_label.image = photo_image  # Keep a reference to avoid garbage collection
+            image_label.grid(row=0, column=0, padx=5, sticky="w")
+
             
             # tables
             for __table in self.databases[__databaseName]:
@@ -120,7 +143,22 @@ class Index:
             itemFrame.pack(fill="both", expand=True)
         
             itemHeader = customtkinter.CTkLabel(master=itemFrame, text=f"{__databaseName}", text_color="#F3F3F3", bg_color="transparent", fg_color="transparent", font=customtkinter.CTkFont(size = 12), justify="left")
-            itemHeader.grid(row=0, column=0, ipady="5", ipadx="20", sticky="w")
+            itemHeader.grid(row=0, column=0, ipady="5", ipadx="30", sticky="w")
+
+            with open(fontFile, "rb") as svg_file:
+                cont = svg_file.read ()
+                mod = cont.decode('utf-8').replace('<path', '<path fill="#ffffff"')
+                mod.encode('utf-8')
+                png_data = svg2png(bytestring=mod, output_width=20, output_height=15)
+
+            # Load the PNG data into a PIL Image
+            image = Image.open(io.BytesIO(png_data))
+            photo_image = ImageTk.PhotoImage(image)
+
+            # Create a label and display the image
+            image_label = customtkinter.CTkLabel(master = itemHeader, text="", image=photo_image)
+            image_label.image = photo_image  # Keep a reference to avoid garbage collection
+            image_label.grid(row=0, column=0, padx=5, sticky="w")
 
             
             # tables
@@ -129,7 +167,8 @@ class Index:
                 if self.databases[__databaseName][__table] == True: item.configure(bg_color = "#178015")
                 item.pack(fill="both", expand=True)
                 item.bind("<Button-1>", partial(self.__selectTable, __databaseName, __table, self.databases[__databaseName], item))
-        
+
+            
         return self
             
     def __loadWelcomePage (self):
@@ -149,6 +188,7 @@ class Index:
                 tablePage.__removeTableSection ()
                 tablePage.__showTableSection ()
                 tablePage.showTableData(__tableThread)
+                tablePage.__showSQLQueryStatusBox ()
                 break
             elif tablePage.tableThread.is_alive ():
                 pass   
@@ -158,11 +198,3 @@ class Index:
             time.sleep(1)
 
         return self
-                
-
-
-
-
-
-
-

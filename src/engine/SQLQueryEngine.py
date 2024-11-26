@@ -24,6 +24,7 @@ class SQLQueryEngine:
         self.optimizedTrees         =   None
         self.plan                   =   None
         self.results                =   None
+        self.error                  =   None
 
     def setDatabasePath (self, dbPath):
         self.databasePath   =   dbPath
@@ -76,23 +77,33 @@ class SQLQueryEngine:
     
     def parse (self, SQL):
         try:
+            self.error  =   None
             inputStream = antlr4.InputStream(SQL)
             sqlAnnotate = SQLAnnotate(sql = inputStream, schema = self.defaultDatabaseSchema)
             sqlAnnotate.annotate()
             self.annotatedTree   = sqlAnnotate.getAnnotations()
-            self.__generateIntermediateCode(self.annotatedTree)
+
+            if self.annotatedTree['error'] == None:
+                self.__generateIntermediateCode(self.annotatedTree)
+            else:
+                self.error  =   self.__generateError ('SYNTAX ERROR', self.annotatedTree['error'])
+                
         except Exception as e:
-            self.__generateError ('INTERMEDIATE CODE', e)
+            self.error  =   self.__generateError ('INTERMEDIATE CODE', e)
 
         return self
         
     def __generateIntermediateCode (self, tree):
-        try:
-            code        =   IntermediateCodeGenerator (tree)
-            self.tree   =   code.generate().getResults()
-            self.__optimizeTree (self.tree)
-        except Exception as e:
-            self.__generateError (e)
+        if tree['error'] == None:
+            try:
+                code        =   IntermediateCodeGenerator (tree)
+                self.tree   =   code.generate().getResults()
+                self.__optimizeTree (self.tree)
+
+            except Exception as e:
+                self.error  =   self.__generateError (e)
+        else:
+            self.error  =   self.__generateError ('SEMANTIC ERROR: ', tree['error'])
         
         return self
 
@@ -106,7 +117,7 @@ class SQLQueryEngine:
                 self.__generateQueryPlan (self.optimizedTrees)
 
         except Exception as e:
-            self.__generateError ('OPTIMIZED TREE', e)
+            self.error  =   self.__generateError ('OPTIMIZED TREE', e)
         
         return self
 
@@ -123,7 +134,7 @@ class SQLQueryEngine:
 
         except Exception as e:
             
-            self.__generateError ('QUERY PLANS', e)
+            self.error  =   self.__generateError ('QUERY PLANS', e)
         
         return self
 
@@ -138,7 +149,7 @@ class SQLQueryEngine:
             self.__selectQueryPlan (queryPlans)
 
         except Exception as e:
-            self.__generateError ('QUERY COSTS', e)
+            self.error  = self.__generateError ('QUERY COSTS', e)
         
         return self
 
@@ -148,7 +159,7 @@ class SQLQueryEngine:
             self.plan       =   bestQueryPlan.getResults()
             if 'plan' in self.plan: self.__executeQueryPlan (self.plan['plan'])
         except Exception as e:
-            self.__generateError ('QUERY PLAN', e)
+            self.error  =   self.__generateError ('QUERY PLAN', e)
         
         return self
 
