@@ -80,9 +80,9 @@ class Index:
         self.bottomFrame.grid_columnconfigure (0, weight=1)
         self.bottomFrame.grid(row=2, column=0, sticky="nsew")
 
-        self.__showHeader ()
-        self.__showHeaderTabs ()
-        self.__showBody ()
+        #self.__showHeader ()
+        #self.__showHeaderTabs ()
+        #self.__showBody ()
 
         
     
@@ -413,6 +413,9 @@ class Index:
                         __data.append(data['rows'][__startIndex+rowIndex])
 
         if self.rowCount < 1 : __data = [[]]
+
+        # prevent old data from showing
+        if self.dataTable: self.dataTable.destroy ()
         
         self.dataTable = CTkTable(master=self.tableDataFrame, justify="left", header_color="#3C703B", hover_color="#2E2E2E", values=__data)
         #table.edit_row(0, text_color = '#2E2E2E')
@@ -534,6 +537,8 @@ class Index:
                     __data.append(__currentData)
             
             self.SQLData    =   {"rowCount": __rowCount , "rows": __data, "executionTime": self.engine.getExecutionTime ()}
+
+            # show table
             self.showTableData (self.SQLData)
             self.SQLQueryTextBoxStatusFrame.destroy ()
             self.__showSQLQueryStatusBox ()

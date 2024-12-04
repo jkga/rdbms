@@ -78,13 +78,28 @@ class SQLAnnotate:
                     self.visitor = SQLVisitor()
                     self.visitor.loadSchema (self.schema)
                     self.data = self.visitor.setDebug(self.debug).visit(self.tree)
+                    if 'select_statement' in self.data: self.__walkStatement(self.data['select_statement'])
                     
             except Exception as e:
                 self.error  =   e
                 self.data   =   []
         
         return self
-    
+
+    def __walkStatement (self, nodes):
+        if nodes != None:
+            if isinstance(nodes, object):
+                for node in nodes:
+                    if not isinstance(node, str):
+                        for n in node:
+                            if len(node[n]) > 0:
+                                self.__walkStatement (node[n])
+                    else:
+                        if node == 'error':
+                            if nodes[node] != None:
+                                if self.error == None:
+                                    self.error = nodes[node]
+
     def getAnnotations (self):
         return {
             'error': self.error,

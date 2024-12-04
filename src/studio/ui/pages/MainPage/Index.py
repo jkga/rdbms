@@ -177,6 +177,9 @@ class Index:
     
     def __loadTablePage (self, databaseName, tableName):
         tablePage = TablePage (self.mainContentFrame, self.engine, databaseName, tableName)
+        tablePage.__showHeader ()
+        tablePage.__showHeaderTabs ()
+        tablePage.__showBody ()
         tablePage.__startTableThread ()    
 
         while True:
