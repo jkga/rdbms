@@ -26,8 +26,9 @@ if __name__ == '__main__':
     sqlAnnotate.annotate()
     annotations = sqlAnnotate.getAnnotations()
 
-    code = IntermediateCodeGenerator (annotations)
-    queryTree = code.generate().getResults()
+    code        =   IntermediateCodeGenerator (annotations)
+    queryTree   =   code.generate().getResults()
+    operation   =   'select'
 
     print('\r\n-->-------[ORIGINAL QUERY TREES]------')
     print (queryTree)
@@ -39,6 +40,9 @@ if __name__ == '__main__':
     transformedTrees = queryTreeTransformer.transform ()
 
     generatedQueryPlans = []
+    
+    if 'operation' in transformedTrees:
+        operation = transformedTrees['operation']
 
     if "trees" in transformedTrees:
         for tree in transformedTrees["trees"]:
@@ -50,7 +54,7 @@ if __name__ == '__main__':
     queryPlans  =    []
     # get estimate
     for plan in generatedQueryPlans:
-        queryCostEstimator  =   SQLQueryCost (plan, schema = Students).setDebug(False)
+        queryCostEstimator  =   SQLQueryCost (plan, schema = Students, operation = operation).setDebug(False)
         queryCost   =   queryCostEstimator.estimate ()
         queryPlans.append (queryCost)
     

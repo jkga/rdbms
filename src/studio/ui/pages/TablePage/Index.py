@@ -410,7 +410,10 @@ class Index:
             for rowIndex in range(__maxRows):
                 if((rowIndex + __startIndex) < (__maxRows + __startIndex)): 
                     if((rowIndex + __startIndex) < self.rowCount + 1):
-                        __data.append(data['rows'][__startIndex+rowIndex])
+                        try:
+                            __data.append(data['rows'][__startIndex+rowIndex])
+                        except:
+                            pass
 
         if self.rowCount < 1 : __data = [[]]
 
@@ -464,7 +467,7 @@ class Index:
                 if rowIndex == 0: __data.append(__headers)
                 # add to data
                 __data.append(__currentData)
-            
+        print(self.rowCount)    
         self.SQLData = {"rowCount": __rowCount , "rows": __data, "executionTime": self.engine.getExecutionTime ()}
         return self.SQLData
 
@@ -521,7 +524,7 @@ class Index:
     
             if __rowCount > 0:
                 __rows = self.engine.getRows ()
-
+    
                 for rowIndex in range(__rowCount):
                     __currentData = []
                     for name in __rows[rowIndex]:
@@ -536,12 +539,20 @@ class Index:
                     # add to data
                     __data.append(__currentData)
             
-            self.SQLData    =   {"rowCount": __rowCount , "rows": __data, "executionTime": self.engine.getExecutionTime ()}
 
-            # show table
-            self.showTableData (self.SQLData)
-            self.SQLQueryTextBoxStatusFrame.destroy ()
-            self.__showSQLQueryStatusBox ()
+            if self.engine.getOperation () == 'select':
+                self.SQLData    =   {"rowCount": __rowCount , "rows": __data, "executionTime": self.engine.getExecutionTime ()}
+
+                # show table
+                self.showTableData (self.SQLData)
+                self.SQLQueryTextBoxStatusFrame.destroy ()
+                self.__showSQLQueryStatusBox ()
+            else:
+                time.sleep(1)
+                # do a refresh
+                self.__executeInitialSQL ()
+                self.ProgressBar.stop ()
+
 
         return self
         

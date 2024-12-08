@@ -8,15 +8,20 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.abspath(os.path.join(dir_path, os.pardir)))
 
 from schemas.SchemaTableFileLoader import SchemaTableFileLoader
+from schemas.SchemaTableFileWriter import SchemaTableFileWriter
 
 class SQLQueryPlanExecution :
-    def __init__ (self, plan):
+    def __init__ (self, plan, operation):
         self.databasePath       =   None
         self.databaseName       =   None
         self.databaseRealPath   =   None
         self.plan               =   plan
+        self.operation          =   operation
         self.currentRow         =   {}
+        self.currentRowIndex    =   0
+        self.showRowIndex       =   False
         self.cachedTables       =   {}
+        self.cachedTablePaths   =   {}
         self.error              =   None
         self.startTime          =   None
         self.endTime            =   None
@@ -54,8 +59,28 @@ class SQLQueryPlanExecution :
         
 
         # execute query
+        # start performance timer
         self.startTime    =   time.perf_counter()
-        self.__executePlan (self.plan)
+
+        if self.operation == 'select'   : self.__executePlan (self.plan)
+        if self.operation == 'delete'   :
+            self.showRowIndex = True 
+            self.__executePlan (self.plan)
+
+            # delete and write to csv
+            for __tablePath in self.cachedTablePaths:
+                schemaWriter = SchemaTableFileWriter (self.cachedTablePaths[__tablePath])
+                if (schemaWriter.fileExists):
+                    for row in self.rows:
+                        schemaWriter.addRowIndex(row['currentRowIndex'])
+                    
+                    # remove
+                    schemaWriter.removeRow ()
+
+
+                
+
+        # end performance timer
         self.endTime    =   time.perf_counter()
         return self
 
@@ -293,10 +318,18 @@ class SQLQueryPlanExecution :
             # save to cache
             if tableFileLoader:
                 if len(tableFileLoader.headers) > 0: 
-                    self.cachedTables[__tableName] = tableFileLoader
+                    self.cachedTables[__tableName]          =       tableFileLoader
+                    self.cachedTablePaths[__tableName]      =       tableFullPath
                     
                     # set the next row to be processed
                     self.currentRow =   tableFileLoader.nextRow ()
+
+                    # add current index in file
+                    self.currentRowIndex = self.currentRowIndex + 1
+                    if self.showRowIndex:
+                        # add index but include the header in the count
+                        self.currentRow['currentRowIndex'] = self.currentRowIndex - 1
+                    
                     if self.debug :
                         print('---[load from file]--')
                         print(self.currentRow)
@@ -310,6 +343,9 @@ class SQLQueryPlanExecution :
 
             # set the next row to be processed
             self.currentRow =   self.cachedTables[__tableName].nextRow ()
+            # add current index in file
+            self.currentRowIndex = self.currentRowIndex + 1
+
             if self.debug : 
                 print('---[load from cache]--')
                 print(self.currentRow)
@@ -318,6 +354,8 @@ class SQLQueryPlanExecution :
             if stopIfEOF and self.currentRow == 'EOF': 
                 self.__mustContinue = False
                 if self.debug : print('---[EOF]---')
+            else:
+                if self.showRowIndex : self.currentRow['currentRowIndex'] = self.currentRowIndex - 1
 
             
     def __processSelection (self, step):
@@ -460,6 +498,7 @@ class SQLQueryPlanExecution :
         return {
             'rowCount'      :   self.rowCount,
             'rows'          :   self.rows,
+            'operation'     :   self.operation,
             'executionTime' :   f"{self.endTime - self.startTime:.8f}s",
         }
     

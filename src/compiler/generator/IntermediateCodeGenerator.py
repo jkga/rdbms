@@ -7,6 +7,7 @@ sys.path.append(os.path.abspath(os.path.join(dir_path, os.pardir)))
 class IntermediateCodeGenerator:
     def __init__ (self, annotations):  
         self.errors         =   []
+        self.operation      =   'SELECT'
         self.annotations    =   annotations
         self.statement      =   {}
         
@@ -21,7 +22,8 @@ class IntermediateCodeGenerator:
     def getResults (self):
         return {
             'error'     :   self.errors,
-            'data'      :   self.statement
+            'data'      :   self.statement,
+            'operation' :   self.operation,
         }
     
     def generate (self):
@@ -36,15 +38,18 @@ class IntermediateCodeGenerator:
 
         if 'select_statement' in self.annotations['data']:
             if len(self.annotations['data']['select_statement']) >= 1:
-                self.statement = self.__readSelectStatement (self.annotations['data']['select_statement'])
+                self.statement =    self.__readSelectStatement (self.annotations['data']['select_statement'])
+                self.operation =    'select'
         
         if 'delete_statement' in self.annotations['data']:
             if len(self.annotations['data']['delete_statement']) >= 1:
-                self.statement = self.__readDeleteStatement (self.annotations['data']['delete_statement'])
+                self.statement =    self.__readDeleteStatement (self.annotations['data']['delete_statement'])
+                self.operation =    'delete'
         
         if 'insert_statement' in self.annotations['data']:
             if len(self.annotations['data']['insert_statement']) >= 1:
-                self.statement = self.__readInsertStatement (self.annotations['data']['insert_statement'])
+                self.statement =    self.__readInsertStatement (self.annotations['data']['insert_statement'])
+                self.operation =    'insert'
         
         return self
     

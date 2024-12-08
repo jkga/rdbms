@@ -64,6 +64,7 @@ class SQLQueryEngine:
         return self.results
     
     def getRowCount (self):
+        if not self.results: return 0
         if not 'rowCount' in self.results: return 0
         return self.results['rowCount']
 
@@ -74,6 +75,10 @@ class SQLQueryEngine:
     def getRows (self):
         if not 'rows' in self.results: return 0
         return self.results['rows']
+
+    def getOperation (self):
+        if not 'operation' in self.results: return 'select'
+        return self.results['operation']
     
     def parse (self, SQL):
         try:
@@ -111,18 +116,21 @@ class SQLQueryEngine:
         try:
             queryTreeTransformer    =   SQLQueryTreeOptimizer (tree)
             transformedTrees        =   queryTreeTransformer.transform ()
+            operation               =   'select'
             
+            if 'operation' in transformedTrees:
+                operation = transformedTrees['operation']
+                
             if "trees" in transformedTrees:
                 self.optimizedTrees  =   transformedTrees
-                self.__generateQueryPlan (self.optimizedTrees)
+                self.__generateQueryPlan (self.optimizedTrees, operation)
 
         except Exception as e:
             self.error  =   self.__generateError ('OPTIMIZED TREE', e)
         
         return self
 
-    def __generateQueryPlan (self, trees):
-        
+    def __generateQueryPlan (self, trees, operation):
         try:
             generatedQueryPlans = []
             for tree in trees["trees"]:
@@ -130,7 +138,7 @@ class SQLQueryEngine:
                 queryPlan = planner.create()
                 generatedQueryPlans.append(queryPlan)
             
-            self.__generateCost (generatedQueryPlans)
+            self.__generateCost (generatedQueryPlans, operation)
 
         except Exception as e:
             
@@ -138,12 +146,12 @@ class SQLQueryEngine:
         
         return self
 
-    def __generateCost (self, plans):
+    def __generateCost (self, plans, operation):
         try:
             queryPlans  =    []
             # get estimate
             for plan in plans:
-                queryCostEstimator  =   SQLQueryCost (plan, schema = self.defaultDatabaseSchema)
+                queryCostEstimator  =   SQLQueryCost (plan, schema = self.defaultDatabaseSchema, operation = operation)
                 queryCost   =   queryCostEstimator.estimate ()
                 queryPlans.append (queryCost)
             self.__selectQueryPlan (queryPlans)
@@ -157,14 +165,14 @@ class SQLQueryEngine:
         try:
             bestQueryPlan   =   SQLQueryPlanSelector (plans)
             self.plan       =   bestQueryPlan.getResults()
-            if 'plan' in self.plan: self.__executeQueryPlan (self.plan['plan'])
+            if 'plan' in self.plan: self.__executeQueryPlan (self.plan['plan'], self.plan['operation'])
         except Exception as e:
             self.error  =   self.__generateError ('QUERY PLAN', e)
         
         return self
 
-    def __executeQueryPlan (self, plan):
-        queryPlanExecution  =   SQLQueryPlanExecution (plan)
+    def __executeQueryPlan (self, plan, operation):
+        queryPlanExecution  =   SQLQueryPlanExecution (plan, operation)
         queryPlanExecution.setDatabasePath(self.databasePath).setDatabaseName(self.databaseName).execute ()
 
         self.results        =   queryPlanExecution.getResults ()

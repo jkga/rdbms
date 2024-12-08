@@ -11,9 +11,13 @@ class SQLQueryCost:
         self.steps          =      0
         self.debug          =      False
         self.totalCosts     =      0
+        self.operation      =      'select'
 
         if 'schema' in kwargs:
             self.schema         =      self.schema = kwargs['schema']() if callable(kwargs['schema']) else kwargs['schema']
+        
+        if 'operation' in kwargs:
+            self.operation  =   kwargs['operation']
     
     def setDebug (self, debug = False):
         self.debug      =   debug
@@ -24,8 +28,9 @@ class SQLQueryCost:
         self.__parse (self.plan)
 
         return {
-            'costs' :   self.totalCosts,
-            'plan'  :   self.plan
+            'costs'     :   self.totalCosts,
+            'plan'      :   self.plan,
+            'operation' :   self.operation
         }
     
     def loadSchema (self, Schema):

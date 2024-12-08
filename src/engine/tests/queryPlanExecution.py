@@ -39,8 +39,9 @@ if __name__ == '__main__':
     sqlAnnotate.annotate()
     annotations = sqlAnnotate.getAnnotations()
 
-    code = IntermediateCodeGenerator (annotations)
-    queryTree = code.generate().getResults()
+    code        =   IntermediateCodeGenerator (annotations)
+    queryTree   =   code.generate().getResults()
+    operation   =   'select'
 
     # SAMPL QUERY
     # "SELECT student.StudNo, student.StudentName, studcourse.StudNo, studcourse.AcadYear FROM (SELECT student.StudNo, student.StudentName, studcourse.StudNo FROM student, studcourse WHERE student.StudNo='2007-52623' and studcourse.AcadYear=2000);"
@@ -55,6 +56,9 @@ if __name__ == '__main__':
 
     generatedQueryPlans = []
 
+    if 'operation' in transformedTrees:
+        operation = transformedTrees['operation']
+    
     if "trees" in transformedTrees:
         for tree in transformedTrees["trees"]:
 
@@ -65,7 +69,7 @@ if __name__ == '__main__':
     queryPlans  =    []
     # get estimate
     for plan in generatedQueryPlans:
-        queryCostEstimator  =   SQLQueryCost (plan, schema = defaultDatabaseSchema).setDebug(False)
+        queryCostEstimator  =   SQLQueryCost (plan, schema = defaultDatabaseSchema, operation = operation).setDebug(False)
         queryCost   =   queryCostEstimator.estimate ()
         queryPlans.append (queryCost)
     
@@ -77,9 +81,9 @@ if __name__ == '__main__':
     print('\r\n-->-------[PLAN]------')
     print(bestPlan)
     print('-->----------------------------\r\n')
-  
+    
     if 'plan' in bestPlan:  
-        queryPlanExecution  =   SQLQueryPlanExecution (bestQueryPlan.getResults()['plan'])
+        queryPlanExecution  =   SQLQueryPlanExecution (bestQueryPlan.getResults()['plan'], bestPlan['operation'] if 'plan' in bestPlan else 'select')
         queryPlanExecution.setDebug(False).setDatabasePath(databasePath).setDatabaseName(databaseName).execute ()
         
         # use getPerformance returns the total rowCount and execution time
