@@ -322,6 +322,79 @@ class Index:
         self.paginationRowCountFirstBtn.set(f"{self.maxRowCountPerPage} rows")
         self.paginationRowCountFirstBtn.grid(row=0, column=0, sticky="ne")
 
+
+    def __showTableStructureStatusSection (self):
+        self.TableStructureStatusFrame = customtkinter.CTkFrame(master=self.bodyFrame, bg_color="transparent", fg_color="transparent")
+        self.TableStructureStatusFrame.grid_rowconfigure(0, weight=1)
+        self.TableStructureStatusFrame.grid_columnconfigure (1, weight=1)
+        self.TableStructureStatusFrame.grid(row=1, column=0, padx="0", pady="20", sticky="nsew")
+
+        self.TableStatusFrameLeft = customtkinter.CTkFrame(master=self.TableStructureStatusFrame, bg_color="transparent", fg_color="transparent", width=500, height=120)
+        self.TableStatusFrameLeft.grid_rowconfigure(1, weight=1)
+        self.TableStatusFrameLeft.grid_columnconfigure (0, weight=1)
+        self.TableStatusFrameLeft.grid(row=0, column=0, padx="0", pady="0", sticky="nsew")
+
+        self.TableStatusFrameRight = customtkinter.CTkFrame(master=self.TableStructureStatusFrame, bg_color="transparent", fg_color="transparent", height=120)
+        self.TableStatusFrameRight.grid_rowconfigure(1, weight=1)
+        self.TableStatusFrameRight.grid_columnconfigure (0, weight=1)
+        self.TableStatusFrameRight.grid(row=0, column=1, padx="0", pady="0", sticky="nsew")
+
+
+        # column icon
+        with open(fontFileTableColumnsIcon, "rb") as svg_file:
+            cont = svg_file.read ()
+            mod = cont.decode('utf-8').replace('<path', '<path fill="#78D576"')
+            mod.encode('utf-8')
+            iconData = svg2png(bytestring=mod, output_width=20, output_height=15)
+
+        # Load the PNG data into a PIL Image
+        imageIcon = Image.open(io.BytesIO(iconData))
+        columnIcon = ImageTk.PhotoImage(imageIcon)
+
+        self.tableText = customtkinter.CTkLabel(master=self.TableStatusFrameLeft, text=f"[{self.databaseName}/{self.tableName}]", bg_color="transparent", fg_color="transparent", font=customtkinter.CTkFont(size = 16), compound='left', justify="left", anchor="w", text_color="#C3C3C3", image=columnIcon, width=500)
+        self.tableText.grid(row=0, column=0, padx="10", sticky="nw")
+        self.tableText = customtkinter.CTkLabel(master=self.TableStatusFrameLeft, text="active table", bg_color="transparent", fg_color="transparent", justify="left", anchor="w", text_color="#656565", width=500)
+        self.tableText.grid(row=1, column=0, padx="10", sticky="nw")
+
+        self.TableStatusFrameRightFirstRow = customtkinter.CTkFrame(master=self.TableStatusFrameRight, bg_color="transparent", fg_color="transparent", height=40)
+        self.TableStatusFrameRightFirstRow.grid_rowconfigure(0, weight=1)
+        self.TableStatusFrameRightFirstRow.grid_columnconfigure (1, weight=1)
+        self.TableStatusFrameRightFirstRow.grid(row=0, column=0, padx="0", pady="0", sticky="nsew")
+
+        self.TableStatusFrameRightSecondRow = customtkinter.CTkFrame(master=self.TableStatusFrameRight, bg_color="transparent", fg_color="transparent", height=40)
+        self.TableStatusFrameRightSecondRow.grid_rowconfigure(0, weight=1)
+        self.TableStatusFrameRightSecondRow.grid_columnconfigure (1, weight=1)
+        self.TableStatusFrameRightSecondRow.grid(row=1, column=0, padx="0", pady="0", sticky="nsew")
+
+        # num rows
+        self.numRowsText = customtkinter.CTkLabel(master=self.TableStatusFrameRightFirstRow, text=f"Total Number of Rows: ({self.rowCount})", bg_color="transparent", fg_color="transparent", justify="left", anchor="w", text_color="#C3C3C3", width=250)
+        self.numRowsText.grid(row=0, column=0, sticky="nw")
+        self.numRowsCountText = customtkinter.CTkLabel(master=self.TableStatusFrameRightFirstRow, text="", bg_color="transparent", fg_color="transparent", justify="left", anchor="w", text_color="#C3C3C3", width=250)
+        self.numRowsCountText.grid(row=0, column=1, sticky="nw")
+
+        # returning results
+        self.returningResultsText = customtkinter.CTkLabel(master=self.TableStatusFrameRightSecondRow, text=f"Number of Columns : {self.engine.getColumnCount(self.tableName)} ", bg_color="transparent", fg_color="transparent", justify="left", anchor="w", text_color="#C3C3C3", width=250)
+        self.returningResultsText.grid(row=0, column=0, sticky="nw")
+
+    def __showTableStructureData (self):
+        __data          =   [['Table Name', 'Type', 'Length', 'Nullable', 'Default']]
+        __columns       =   self.engine.showColumns(self.tableName)
+        
+        for column in __columns:
+           __data.append([column, __columns[column]['type'], __columns[column]['length'], str(__columns[column]['nullable']), (',').join(__columns[column]['enum']) if __columns[column]['enum'] else '']) 
+        
+
+
+        # prevent old data from showing
+        if self.dataTable: self.dataTable.destroy ()
+        
+        self.dataTable = CTkTable(master=self.tableDataFrame, justify="left", header_color="#3C703B", hover_color="#2E2E2E", values=__data)
+        self.dataTable.grid(row=0, column=0, padx="0", pady="0", sticky="nsew")
+
+    
+    def __showTableStructureSection (self):
+        self.__showTableStructureStatusSection ()
+
     def __changeDisplayRowCount (self, choice):
         if choice != "show all rows":
             option = choice.split(' ')
@@ -345,17 +418,29 @@ class Index:
     def __openMaxRowCountWindowCallback (self, topWindow, results = None):
         topWindow.destroy ()
         self.__changeDisplayRowCount (f"{self.rowCount} rows")
-
+    
     def __removeTableStatusSection (self):
-        self.TableStatusFrame.destroy ()
+        try:
+            self.TableStatusFrame.destroy ()
+        except Exception:
+            pass
 
-    def __removeTableSection(self):
+    def __removeTableSection (self):
         try:
             self.tableDataFrame.destroy ()
         except Exception:
             pass
 
         return self
+    
+    def __removePaginationSection (self):
+        try:
+            self.paginationFrame.destroy ()
+        except Exception:
+            pass
+    
+    def __removeSQLQueryStatusBox (self):
+        self.SQLQueryTextBoxStatusFrame.destroy ()
 
     def __showTableSection (self):
         self.tableDataFrame = CTkXYFrame(self.midFrame)
@@ -428,6 +513,7 @@ class Index:
         self.totalPages = math.ceil(self.rowCount / __maxRows)
         self.__removeTableStatusSection ()
         self.__showTableStatusSection ()
+        self.__removePaginationSection ()
         self.__showPaginationSection ()
         self.ProgressBar.stop ()
 

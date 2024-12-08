@@ -68,6 +68,11 @@ class SQLQueryEngine:
         if not 'rowCount' in self.results: return 0
         return self.results['rowCount']
 
+    def getColumnCount (self, tableName):
+        __tb = self.showTables ()
+        if not __tb: return 0
+        return len (__tb)
+
     def getExecutionTime (self):
         if not 'executionTime' in self.results: return 0
         return self.results['executionTime']

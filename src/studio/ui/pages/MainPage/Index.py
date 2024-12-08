@@ -180,18 +180,44 @@ class Index:
         tablePage.__showHeader ()
         tablePage.__showHeaderTabs ()
         tablePage.__showBody ()
-        tablePage.__startTableThread ()    
+        tablePage.__startTableThread ()
+
+        def __showSQLSection (tableThread):
+            tablePage.currentPage = 1
+            tablePage.bodyFrame.destroy ()
+            tablePage.__removeTableSection ()
+            tablePage.__showBody ()
+            tablePage.__showSQLQueryTextBox ()
+            tablePage.__showTableStatusSection ()
+            tablePage.__removeTableSection ()
+            tablePage.__showTableSection ()
+            tablePage.showTableData(__tableThread)
+            tablePage.__showSQLQueryStatusBox ()
+            tablePage.paginationFrame.destroy ()
+            tablePage.__showPaginationSection ()
+        
+        def __showTableStructureSection ():
+            tablePage.bodyFrame.destroy ()
+            tablePage.__removeTableStatusSection ()
+            tablePage.__removeTableSection ()
+            tablePage.__removeSQLQueryStatusBox ()
+            tablePage.__showBody ()
+            tablePage.__showTableStructureSection ()
+            tablePage.__removePaginationSection ()
+            tablePage.__removeTableStatusSection ()
+            tablePage.paginationFrame.destroy ()
+            tablePage.__showTableSection ()
+            tablePage.__showTableStructureData ()
+            
 
         while True:
             __tableThread = tablePage.getTableThread ()
 
             if __tableThread is not None:
-                tablePage.__showSQLQueryTextBox ()
-                tablePage.__showTableStatusSection ()
-                tablePage.__removeTableSection ()
-                tablePage.__showTableSection ()
-                tablePage.showTableData(__tableThread)
-                tablePage.__showSQLQueryStatusBox ()
+                __showSQLSection (__tableThread)
+
+                tablePage.headerTabQueryBtn.configure (command=partial(__showSQLSection, __tableThread))
+                tablePage.headerTabStructureBtn.configure (command=__showTableStructureSection)
                 break
             elif tablePage.tableThread.is_alive ():
                 pass   
