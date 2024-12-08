@@ -108,7 +108,7 @@
             },
             "indexes"   :   {},
             "columns"   :   {
-                "studno"    :   {
+                "cno"    :   {
                     "name"      :   "CNo",
                     "type"      :   "int",
                     "nullable"  :   "false"
