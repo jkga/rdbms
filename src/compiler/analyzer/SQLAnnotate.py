@@ -54,7 +54,6 @@ class SQLAnnotate:
         return self
     
     def annotate (self):
-
         if not self.input == None:
             try:
                 self.lexer          =   SQLLexer(self.input)

@@ -30,6 +30,7 @@ class SQLQueryPlanExecution :
         self.tableFileFormat    =   'csv'
         self.rowCount           =   0
         self.rows               =   []
+        self.dataToInsert       =   {}
         self.__mustContinue     =   True
 
     def setDebug (self, debug = False):
@@ -77,6 +78,13 @@ class SQLQueryPlanExecution :
                     # remove
                     schemaWriter.removeRow ()
 
+        if self.operation == 'insert'   :
+            self.__executePlan (self.plan)
+            if len(self.dataToInsert) > 0:
+                for __tablePath in self.cachedTablePaths:
+                    schemaWriter = SchemaTableFileWriter (self.cachedTablePaths[__tablePath])
+                    if (schemaWriter.fileExists):
+                        schemaWriter.addRow (self.dataToInsert)
 
                 
 
@@ -289,12 +297,18 @@ class SQLQueryPlanExecution :
                     else:
                         self.__processStep (child, stopIfEOF, resetRelation)
             else:
-                self.__processStep (children, stopIfEOF, resetRelation)
+                # if the children contains union (insert function), do not proceed to regular process
+                # instead, process the insert directly
+                if '__u__' in children:
+                    self.__processUnion (steps['children'])
+                else:
+                    self.__processStep (children, stopIfEOF, resetRelation)
 
     def __processStep (self, step, stopIfEOF = False, resetRelation = False):
         if '__π__' in step: self.__processProjection (step)
         if '__Ω__' in step: self.__processSelection (step)
         if '__r__' in step: self.__processRelation (step, stopIfEOF, resetRelation)
+        if '__u__' in step: self.__mustContinue = False
 
     def __processRelation (self, step, stopIfEOF = False, resetRelation = False):
         # set default table name
@@ -493,6 +507,75 @@ class SQLQueryPlanExecution :
         
         self.currentRow =   __curRow
         return self
+    
+    # Union is equivalent to insert
+    def __processUnion (self, step):
+
+        if len(step) < 1: 
+            self.__mustContinue = False
+            return None
+        
+        if len(step[0]) < 1: 
+            self.__mustContinue = False
+            return None
+
+        if len(step[0]['__u__']) < 1: 
+            self.__mustContinue = False
+            return None
+
+        # set default table name
+        __tableName     =   step[0]['__u__'][0]['__r__']
+        __columns       =   step[1]['__π__']
+        __values        =   step[0]['__t__']
+        
+        # check non empty table, columns, and values
+        if isinstance(__tableName, list):
+            __tableName =   __tableName[0]
+        else:
+            self.__mustContinue = False
+            return None
+
+        if len (__columns) < 1: self.__mustContinue = False
+        if len (__values)  < 1: self.__mustContinue = False
+
+        if self.debug:
+            print('\r\n-----[RELATION]-----')
+            print(__tableName)
+            print('----------------\r\n')
+
+            print('\r\n-----[COLUMNS]-----')
+            print(__columns)
+            print('----------------\r\n')
+
+            print('\r\n-----[VALUES]-----')
+            print(__values)
+            print('----------------\r\n')
+
+        # ignore if already present in cache
+        if not __tableName in self.cachedTables:
+            tableName           =   f"{__tableName}{self.tablePathSuffix}.{self.tableFileFormat}"
+            tableFullPath       =   f"{self.databaseRealPath}/{tableName}"
+            tableFileLoader     =   SchemaTableFileLoader (tableFullPath)
+            # save to cache
+            if tableFileLoader:
+                if len(tableFileLoader.headers) > 0: 
+                    self.cachedTables[__tableName]          =       tableFileLoader
+                    self.cachedTablePaths[__tableName]      =       tableFullPath
+
+                __dataToInsert  = {}
+                __columnIndex   =   0
+                for header in tableFileLoader.headers:
+                    if header in __columns:
+                        __dataToInsert[header] = __values[__columnIndex]
+                        __columnIndex += 1
+                    else:
+                        __dataToInsert[header] = ''
+
+                self.dataToInsert = __dataToInsert
+                self.rows =   [__dataToInsert]
+
+        self.__mustContinue = False
+        return None
 
     def getResults (self):
         return {

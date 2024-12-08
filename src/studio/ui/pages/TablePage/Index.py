@@ -467,7 +467,7 @@ class Index:
                 if rowIndex == 0: __data.append(__headers)
                 # add to data
                 __data.append(__currentData)
-        print(self.rowCount)    
+
         self.SQLData = {"rowCount": __rowCount , "rows": __data, "executionTime": self.engine.getExecutionTime ()}
         return self.SQLData
 
@@ -540,18 +540,14 @@ class Index:
                     __data.append(__currentData)
             
 
-            if self.engine.getOperation () == 'select':
-                self.SQLData    =   {"rowCount": __rowCount , "rows": __data, "executionTime": self.engine.getExecutionTime ()}
+            
+            self.SQLData    =   {"rowCount": __rowCount , "rows": __data, "executionTime": self.engine.getExecutionTime ()}
 
-                # show table
-                self.showTableData (self.SQLData)
-                self.SQLQueryTextBoxStatusFrame.destroy ()
-                self.__showSQLQueryStatusBox ()
-            else:
-                time.sleep(1)
-                # do a refresh
-                self.__executeInitialSQL ()
-                self.ProgressBar.stop ()
+            # show table
+            self.showTableData (self.SQLData)
+            self.SQLQueryTextBoxStatusFrame.destroy ()
+            self.__showSQLQueryStatusBox ()
+            
 
 
         return self

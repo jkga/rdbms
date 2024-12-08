@@ -1,6 +1,6 @@
 import sys
 import os
-import pandas as pd
+import pandas
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.abspath(os.path.join(dir_path, os.pardir)))
@@ -43,7 +43,7 @@ class SchemaTableFileWriter :
     def removeRow (self, rowNumbers = None):
         if "error" in self.results: return self
 
-        docs    = pd.read_csv(self.file)
+        docs    = pandas.read_csv(self.file)
         
         if not rowNumbers == None:
             if len(rowNumbers)  > 0:
@@ -52,5 +52,11 @@ class SchemaTableFileWriter :
         else:
             docs    = docs.drop(self.rowIndexes)
 
+        docs.to_csv(self.file, index=False)  
 
+    def addRow (self, row):
+        if "error" in self.results: return self
+
+        docs    =   pandas.read_csv(self.file)
+        docs.loc[len(docs)] = row
         docs.to_csv(self.file, index=False)  
