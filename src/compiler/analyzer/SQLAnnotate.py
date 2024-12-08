@@ -6,9 +6,10 @@ import os
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.abspath(os.path.join(dir_path, os.pardir)))
 
-from parser.SQLLexer import SQLLexer
-from parser.SQLParser import SQLParser
-from parser.SQLVisitor import SQLVisitor
+from compiler.parser.SQLLexer import SQLLexer
+from compiler.parser.SQLParser import SQLParser
+from compiler.parser.SQLVisitor import SQLVisitor
+from compiler.parser.SQLCustomErrorListener import SQLCustomErrorListener
 
 
 class SQLAnnotate:
@@ -53,23 +54,51 @@ class SQLAnnotate:
         return self
     
     def annotate (self):
-
         if not self.input == None:
-            self.lexer = SQLLexer(self.input)
-            self.stream = CommonTokenStream(self.lexer)
-            self.parser = SQLParser(self.stream)
-            self.tree = self.parser.sql_statement()
+            try:
+                self.lexer          =   SQLLexer(self.input)
+                self.stream         =   CommonTokenStream(self.lexer)
+                self.parser         =   SQLParser(self.stream)
+                self.errorListener  =   SQLCustomErrorListener ()
 
-            if self.parser.getNumberOfSyntaxErrors() > 0:
-                self.error = self.errorList[2]
-            else:
-                # walk to parse tree and generate annnotations
-                self.visitor = SQLVisitor()
-                self.visitor.loadSchema (self.schema)
-                self.data = self.visitor.setDebug(self.debug).visit(self.tree)
+                self.parser.removeErrorListeners()
+                self.parser.addErrorListener(self.errorListener)
+
+                self.tree = self.parser.sql_statement()
+
+                if self.errorListener.errors: self.error = self.errorListener.errors
+
+                
+                if self.parser.getNumberOfSyntaxErrors() > 0:
+                    self.error = self.errorListener.errors
+                
+                if self.error == None:
+                    # walk to parse tree and generate annnotations
+                    self.visitor = SQLVisitor()
+                    self.visitor.loadSchema (self.schema)
+                    self.data = self.visitor.setDebug(self.debug).visit(self.tree)
+                    if 'select_statement' in self.data: self.__walkStatement(self.data['select_statement'])
+                    
+            except Exception as e:
+                self.error  =   e
+                self.data   =   []
         
         return self
-    
+
+    def __walkStatement (self, nodes):
+        if nodes != None:
+            if isinstance(nodes, object):
+                for node in nodes:
+                    if not isinstance(node, str):
+                        for n in node:
+                            if len(node[n]) > 0:
+                                self.__walkStatement (node[n])
+                    else:
+                        if node == 'error':
+                            if nodes[node] != None:
+                                if self.error == None:
+                                    self.error = nodes[node]
+
     def getAnnotations (self):
         return {
             'error': self.error,

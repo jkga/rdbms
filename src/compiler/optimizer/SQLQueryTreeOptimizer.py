@@ -11,6 +11,7 @@ class SQLQueryTreeOptimizer:
         self.queries        =       []
         self.queryTree      =       queryTree
         self.passCount      =       5
+        self.operation      =       'select'
         self.debug          =       False
         self.debugLevel     =       0
 
@@ -24,6 +25,9 @@ class SQLQueryTreeOptimizer:
         return self
     
     def transform (self):
+        if 'operation' in self.queryTree:
+            self.operation   =   self.queryTree['operation']
+
         if 'data' in self.queryTree:
             # original data
             parsedNode = self.queryTree['data']
@@ -57,7 +61,7 @@ class SQLQueryTreeOptimizer:
                     self.queries.append (parsedNode)
 
 
-        return { 'trees' : self.queries }
+        return { 'trees' : self.queries, 'operation' : self.operation }
     
     def __getLastChild (self, node):
         # get all children's children
@@ -144,7 +148,7 @@ class SQLQueryTreeOptimizer:
                 if (currentNodeType['nodeType'] == nextNodeType['nodeType']) and (currentNodeType['nodeValue'] == nextNodeType['nodeValue']):
                     parsedNode          =   self.__removeDuplicateNextNode (currentNode, nextNode)
                     currentNode         =   parsedNode['currentNode']
-                    nextNode            =   parsedNode['nextNode']
+                    #nextNode            =   parsedNode['nextNode']
                     currentNodeType     =   parsedNode['currentNodeType']
                     nextNodeType        =   parsedNode['nextNodeType']
                 
@@ -225,12 +229,12 @@ class SQLQueryTreeOptimizer:
                     currentNodeType =   parsedNode['currentNodeType']
                     nextNodeType    =   parsedNode['nextNodeType']
 
-                if (currentNodeType['nodeType'] == '__π__') and (nextNodeType['nodeType'] == '__x__'):
+                '''if (currentNodeType['nodeType'] == '__π__') and (nextNodeType['nodeType'] == '__x__'):
                     parsedNode      =   self.__pushProjectionToCrossJoin (currentNode, nextNode)
                     currentNode     =   parsedNode['currentNode']
                     nextNode        =   parsedNode['nextNode']
                     currentNodeType =   parsedNode['currentNodeType']
-                    nextNodeType    =   parsedNode['nextNodeType']
+                    nextNodeType    =   parsedNode['nextNodeType']'''
 
                 # Disable converting to theta join
                 '''if (currentNodeType['nodeType'] == '__Ω__') and (nextNodeType['nodeType'] == '__x__'):

@@ -1,0 +1,236 @@
+{
+    "schema"    :   "students",
+    "tables"    :   {
+        "student" : {
+            "name"  :   "STUDENT",
+            "info"  :   {
+                "rowCount"  :   0
+            },
+            "indexes"   :   {},
+            "columns"   :   {
+                "studno"    :   {
+                    "name"      :   "StudNo",
+                    "type"      :   "string",
+                    "nullable"  :   "false"
+                },
+
+                "studentname"    :   {
+                    "name"      :   "StudentName",
+                    "type"      :   "string",
+                    "nullable"  :   "false",
+                    "length"    :   50
+                },
+
+                "birthday"    :   {
+                    "name"      :   "Birthday",
+                    "type"      :   "date",
+                    "nullable"  :   "true",
+                    "length"    :   8
+                },
+
+                "degree"    :   {
+                    "name"      :   "Degree",
+                    "type"      :   "string",
+                    "nullable"  :   "false",
+                    "length"    :   50
+                },
+
+                "major"    :   {
+                    "name"      :   "Major",
+                    "type"      :   "string",
+                    "nullable"  :   "true",
+                    "length"    :   50
+                },
+
+                "unitsearned"   :   {
+                    "name"      :   "UnitsEarned",
+                    "type"      :   "int",
+                    "nullable"  :   "true"
+                }
+            }
+        
+        },
+
+        "studenthistory" : {
+            "name"  :   "STUDENTHISTORY",
+            "info"  :   {
+                "rowCount"  :   0
+            },
+            "indexes"   :   {},
+            "columns"   :   {
+                "studno"    :   {
+                    "name"      :   "StudNo",
+                    "type"      :   "string",
+                    "nullable"  :   "false"
+                },
+
+                "description"    :   {
+                    "name"      :   "Description",
+                    "type"      :   "string",
+                    "nullable"  :   "true",
+                    "length"    :   50
+                },
+
+                "action"    :   {
+                    "name"      :   "Action",
+                    "type"      :   "string",
+                    "nullable"  :   "true",
+                    "length"    :   50
+                },
+
+                "degree"    :   {
+                    "name"      :   "Degree",
+                    "type"      :   "string",
+                    "nullable"  :   "false",
+                    "length"    :   50
+                },
+
+                "datefiled"    :   {
+                    "name"      :   "DateFiled",
+                    "type"      :   "date",
+                    "nullable"  :   "true",
+                    "length"    :   8
+                },
+
+                "dateresolved"   :   {
+                    "name"      :   "DateResolved",
+                    "type"      :   "date",
+                    "nullable"  :   "true",
+                    "length"    :   8
+                }
+            }
+        },
+
+        "course" : {
+            "name"  :   "COURSE",
+            "info"  :   {
+                "rowCount"  :   0
+            },
+            "indexes"   :   {},
+            "columns"   :   {
+                "cno"    :   {
+                    "name"      :   "CNo",
+                    "type"      :   "int",
+                    "nullable"  :   "false"
+                },
+
+                "ctitle"    :   {
+                    "name"      :   "CTitle",
+                    "type"      :   "string",
+                    "nullable"  :   "false",
+                    "length"    :   50
+                },
+
+                "cdesc"    :   {
+                    "name"      :   "Cdesc",
+                    "type"      :   "string",
+                    "nullable"  :   "true", 
+                    "length"    :   50
+                },
+
+                "noofunits"     :   {
+                    "name"      :   "NoOfUnits",
+                    "type"      :   "int",
+                    "nullable"  :   "false"
+                },
+
+                "haslab"        :   {
+                    "name"      :   "HasLab",
+                    "type"      :   "int",
+                    "nullable"  :   "true"
+                },
+
+                "semoffered"    :   {
+                    "name"      :   "SemOffered",
+                    "type"      :   "enum",
+                    "nullable"  :   "true",
+                    "enum"      :   ["1st", "2nd", "mid"]
+                }
+            }
+        },
+
+        "courseoffering" : {
+            "name"  :   "COURSEOFFERING",
+            "info"  :   {
+                "rowCount"  :   0
+            },
+            "indexes"   :   {},
+            "columns"   :   {
+                "semester"    :   {
+                    "name"      :   "Semester",
+                    "type"      :   "enum",
+                    "nullable"  :   "true",
+                    "enum"      :   ["1st", "2nd", "mid"]
+                },
+
+                "acadyear"    :   {
+                    "name"      :   "AcadYear",
+                    "type"      :   "string",
+                    "nullable"  :   "false",
+                    "length"    :   50
+                },
+
+                "cno"    :   {
+                    "name"      :   "CNo",
+                    "type"      :   "int",
+                    "nullable"  :   "False"
+                },
+
+                "section"     :   {
+                    "name"      :   "Section",
+                    "type"      :   "string",
+                    "nullable"  :   "false"
+                },
+
+                "time"          :   {
+                    "name"      :   "Time",
+                    "type"      :   "time",
+                    "nullable"  :   "true",
+                    "length"    :   8
+                },
+
+                "maxstud"    :   {
+                    "name"      :   "MaxStud",
+                    "type"      :   "int",
+                    "nullable"  :   "true"
+                }
+            }   
+        },
+
+        "studcourse" : {
+            "name"  :   "STUDCOURSE",
+            "info"  :   {
+                "rowCount"  :   0
+            },
+            "indexes"   :   {},
+            "columns"   :   {
+                "studentno"    :   {
+                    "name"      :   "StudNo",
+                    "type"      :   "string",
+                    "nullable"  :   "true"
+                },
+
+                "cno"    :   {
+                    "name"      :   "CNo",
+                    "type"      :   "int",
+                    "nullable"  :   "False"
+                },
+
+                "semester"    :   {
+                    "name"      :   "Semester",
+                    "type"      :   "enum",
+                    "nullable"  :   "true",
+                    "enum"      :   ["1st", "2nd", "mid"]
+                },
+
+                "acadyear"          :   {
+                    "name"      :   "AcadYear",
+                    "type"      :   "date",
+                    "nullable"  :   "true",
+                    "length"    :   8
+                }
+            }   
+        }
+    }
+    
+}

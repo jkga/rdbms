@@ -1,0 +1,16 @@
+CNo,CTitle,CDesc,NoOfUnits,HasLab,SemOffered
+CMSC 12,Foundations of Computer Science,Pellentesque habitant morbi tristique ,3,1,1st
+CMSC 21,Fundamentals of Programming,Sed ut perspiciatis unde omnis iste,5,1,2nd
+CMSC 22,Object-oriented Programming,nunc elit.,3,0,2nd
+CMSC 23,Mobile Computing,Vestibulum ante ipsum primis,2,0,Mid
+CMSC 56,Discrete Mathematical Structures I,Suspendisse potenti.,4,1,Mid
+CMSC 57,Discrete Mathematical Structures II,Nunc non turpis nec ,3,0,1st
+STAT 101,Statistical Methods,Nunc non turpis nec,3,0,Mid
+SOC 130,Social Psychology,Donec auctor,3,0,1st
+DEVC 10,Introduction to Development Communication,Fusce euismod,5,0,1st
+CMSC 127,File Processing and Database Systems,Nunc non turpis nec justo,2,1,1st
+CMSC 132,Computer Architecture,Vestibulum ante ipsum primis in ,4,0,Mid
+CMSC 227,Advanced Database Systems,Donec auctor,2,0,Mid
+PI 10,The Life and Works of Jose Rizal,Suspendisse potenti. Nulla,1,0,1st
+COMM 10,Critical Perspectives in Communication,nunc elit.,4,1,Mid
+CMSC 125,Operating Systems,Vestibulum ante ipsu,3,0,2nd
