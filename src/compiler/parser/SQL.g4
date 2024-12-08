@@ -43,7 +43,7 @@ NULL: 'null';
 DOT: '.';
 OPENPAR: '(';
 CLOSEPAR: ')';
-WORD: [a-z_]+[0-9]*;
+WORD: [a-zA-Z_][a-zA-Z_0-9]*;
 
 NUMBER: [0-9]+;
 STRING: '\'' .*? '\'';
