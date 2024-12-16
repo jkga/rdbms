@@ -24,7 +24,7 @@ class Index:
         self.databasePath   =   databasePath
         self.databases      =   {}
         self.tabs           =   f"       "
-        self.footNote       =   "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"
+        self.footNote       =   "This is a project requirement for the course `CMSC 227 - Advanced Database Systems`. It must not be used in production, reproduced, or distributed to fulfill the same course requirements. You may only use this as a reference for future work."
         self.projectLink    =   "https://github.com/UPLB-CMSC227/rdbms"
         self.mainFrame      =   customtkinter.CTkFrame(master=root, corner_radius=0, bg_color="transparent", fg_color="transparent")
 
