@@ -377,7 +377,7 @@ class Index:
         self.returningResultsText.grid(row=0, column=0, sticky="nw")
 
     def __showTableStructureData (self):
-        __data          =   [['Table Name', 'Type', 'Length', 'Nullable', 'Default']]
+        __data          =   [['Column Name', 'Type', 'Length', 'Nullable', 'Default']]
         __columns       =   self.engine.showColumns(self.tableName)
         
         for column in __columns:

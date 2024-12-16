@@ -1,31 +1,50 @@
 # RDBMS
 
-This **Basic Relational Database Management System** will support data management, retrieval, and storage. Only `INSERT`, `SELECT`, and `DELETE` operations are allowed by the system. Consequently, query clauses will not be allowed, with the exception of the `WHERE` clause, which may contain up to two conditions (with the conditions concatenated using `AND` and `OR`).
+This **Basic Relational Database Management System** is designed for managing, retrieving, and storing data. It currently permits only three operations: `INSERT`, `SELECT`, and `DELETE`. While most query clauses are not allowed, the `WHERE` clause is an exception; it can include up to two conditions, which may be combined using `AND` or `OR`.
 
+Please be aware that this is a project requirement for the course `CMSC 227 - Advanced Database Systems`. It must not be used in production, reproduced, or distributed to fulfill the same course requirements. You may only use this as a reference for future work.
 
-## Parser (Antlr4)
-![parse tree](./src/docs/assets/img/sql_parse_tree.png)
-### Building from Source
-```bash
-  antlr4 -Dlanguage=Python3 ./src/parser/SQL.g4
+## Requirements
+- Python v3.10.15
+- antlr4-python3-runtime
+- python-dotenv
+- python3-venv
+- CTkTable
+- Pillow
+- CustomTkinter
+- CairoSVG
+
+## Installation (MacOS)
+**A.** Install Python using Homebrew
+```cli
+brew install python@3.10.15
+brew install python3-venv
 ```
 
-### Inspecting Parse Tree
-```bash
-  antlr4-parse ./src/parser/SQL.g4 sql_statement  -gui ./src/parser/tests/sql_samples/select.txt
-```
+> IMPORTANT: Please make sure to install the exact version of Python to prevent any threading issues.
 
-### Test Parser
+**B.** Create a Python virtual environment inside the project directory
 ```python
-  python src/parser/tests/parser.py
+python3 -m venv venv
 ```
 
+**C.** Activate virtual environment
+```cli
+source venv/bin/activate
+```
 
-## Annotator
-
-### Test Annotation
+**D.** Install other requirements
 ```python
-  python src/parser/tests/annotator.py "SELECT * FROM (SELECT student_info.name, student_enrollment.name FROM student_info, student_enrollment WHERE student_info.name='test' OR student_info.name='a') WHERE student_enrollment.name = 'test';"
+python -m pip install -r requirements.txt
+```
+**E.** Locate the database configuration file in the `configs/` directory and rename `.env.example` to `.env`.  
+
+**F.** Run the RDBMS Studio
+```python
+python src/studio/main.py
 ```
 
-![parse tree](./src/docs/assets/img/annotations.png)
+## Documentations
+* [Project Components ](./docs/components.md)
+* [Database](./docs/database.md)
+* [Supported SQL Commands](./docs/commands.md)
