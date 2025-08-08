@@ -16,8 +16,19 @@ sys.path.append(os.path.abspath(os.path.join(dir_path, os.pardir)))
 from ui.pages.MainPage.Index import Index as MainPage
 
 # load env variables
-load_dotenv(dotenv_path=f'configs/.env')
+# PyInstaller temp folder
+# https://pyinstaller.org/en/stable/runtime-information.html
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    load_dotenv(dotenv_path=os.path.join(sys._MEIPASS, os.path.join("configs", ".env")))
+else:
+    load_dotenv(dotenv_path=f'configs/.env')
+
 databasePath = os.getenv('DATABASE_PATH')
+
+# remove ./ from path to be able to load by pyinstaller correctly
+__arrayDBPath = databasePath.split('./')
+if __arrayDBPath[1]:
+    databasePath = __arrayDBPath[1]
 
 class Index(customtkinter.CTk):
     def __init__(self):
@@ -28,7 +39,6 @@ class Index(customtkinter.CTk):
         self._set_appearance_mode('dark')
         self.resizable(False, False)
         self.description = "This is a project requirement for the course `CMSC 227 - Advanced Database Systems`. It must not be used in production, reproduced, or distributed to fulfill the same course requirements. You may only use this as a reference for future work."
-
         self.grid_rowconfigure(0, weight=1)  # configure grid system
         self.grid_columnconfigure(0, weight=1)
 
@@ -97,6 +107,14 @@ class Index(customtkinter.CTk):
 
     def __checkPath (self, path):
         __realPath = os.path.realpath(path)
+        if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+            # test
+            __resource_path = os.path.abspath(os.path.join(sys._MEIPASS, "..", "Resources"))
+            __realPath = os.path.join(__resource_path, path)
+        else:
+            # test
+            print ('e')
+
 
         return {"path" : __realPath, "exists" : os.path.exists(__realPath)}
 

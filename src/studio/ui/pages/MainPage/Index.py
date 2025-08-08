@@ -13,8 +13,27 @@ from PIL import Image, ImageTk
 import io
 
 # load env variables
-load_dotenv(dotenv_path=f'configs/.env')
+# PyInstaller temp folder
+# https://pyinstaller.org/en/stable/runtime-information.html
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    load_dotenv(dotenv_path=os.path.join(sys._MEIPASS, os.path.join("configs", ".env")))
+else:
+    load_dotenv(dotenv_path=f'configs/.env')
+
 databasePath = os.getenv('DATABASE_PATH')
+
+# remove ./ from path to be able to load by pyinstaller correctly
+__arrayDBPath = databasePath.split('./')
+if __arrayDBPath[1]:
+    databasePath = __arrayDBPath[1]
+
+# correctly load database using pyinstaller
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    # test
+    __resource_path = os.path.abspath(os.path.join(sys._MEIPASS, "..", "Resources"))
+    __realPath = os.path.join(__resource_path, databasePath)
+    databasePath = __realPath
+
 
 # manual access to schema directory
 dir_path = os.path.dirname(os.path.realpath(__file__))
